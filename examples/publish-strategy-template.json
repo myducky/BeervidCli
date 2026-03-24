@@ -1,0 +1,23 @@
+{
+  "strategyCreateDTO": {
+    "name": "Daily Product Publish",
+    "strategyType": "TEMPLATE",
+    "contentTemplates": [
+      "tpl_001"
+    ],
+    "pushMode": 0,
+    "pushTimeType": 0,
+    "pushConfig": {
+      "batchExecutedAt": [
+        {
+          "date": "2026-03-26",
+          "times": [
+            "10:00"
+          ]
+        }
+      ],
+      "execType": "LONG_TERM"
+    },
+    "businessId": "account_xxx"
+  }
+}

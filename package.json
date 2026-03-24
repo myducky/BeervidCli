@@ -1,0 +1,13 @@
+{
+  "name": "beervid-cli",
+  "version": "0.1.0",
+  "description": "Zero-dependency CLI for the Beervid Open API",
+  "bin": {
+    "beervid": "./bin/beervid.js"
+  },
+  "type": "commonjs",
+  "scripts": {
+    "start": "node ./bin/beervid.js",
+    "test:smoke": "node ./bin/beervid.js --help"
+  }
+}

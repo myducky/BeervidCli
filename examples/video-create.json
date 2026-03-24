@@ -1,0 +1,8 @@
+{
+  "request": {
+    "templateId": "tpl_001",
+    "prompt": "Create a TikTok-style promo video for a kitchen product",
+    "language": "en",
+    "aspectRatio": "9:16"
+  }
+}
