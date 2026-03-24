@@ -1218,9 +1218,16 @@ function copyOptionalCsvFlag(flags, target, from, to = from, mapValue = (value) 
 function findTaskIdsFromMessage(data) {
   const message = findDeepValue(data, ["message"]);
   if (typeof message !== "string") return [];
-  const matches = message.match(/[A-Za-z0-9_-]{8,}/g);
-  if (!matches) return [];
-  return matches.filter((value) => value.toLowerCase() !== "success");
+  const uuidLikeMatches = message.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi);
+  if (uuidLikeMatches && uuidLikeMatches.length > 0) return uuidLikeMatches;
+
+  const bracketMatches = message.match(/\[([^\]]+)\]/);
+  if (!bracketMatches) return [];
+
+  return bracketMatches[1]
+    .split(",")
+    .map((value) => value.trim())
+    .filter((value) => /^[A-Za-z0-9_-]{8,}$/.test(value));
 }
 
 module.exports = { main };
