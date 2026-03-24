@@ -29,6 +29,28 @@ node ./bin/beervid.js publish strategy delete --id strategy_xxx
 node ./bin/beervid.js publish records
 ```
 
+## Install
+
+Install from the local repo while iterating:
+
+```bash
+npm link
+beervid --help
+```
+
+Install from npm after publishing:
+
+```bash
+npm install -g beervid-cli
+beervid auth status
+```
+
+Or run it without installing globally:
+
+```bash
+npx beervid-cli --help
+```
+
 ## Video Create Rules
 
 - `techType: "veo"` means the cinematic model. In each `fragmentList` item, `segmentCount` maps to duration: `1=8s`, `2=16s`, `3=24s`, `4=32s`.
@@ -39,18 +61,6 @@ node ./bin/beervid.js publish records
 - `productReferenceImages` allows at most 3 images for VEO and at most 1 image for each SORA-family fragment.
 - `nineGridImages` allows at most 9 images for each SORA-family fragment, and `nineGridImages` plus `productReferenceImages` must either both be provided or both be empty.
 - `spliceMethod: "LONG_TAKE"` is not allowed for SORA-family fragments or for VEO fragments when `segmentCount` is `1`.
-
-## Install Locally
-
-```bash
-npm link
-```
-
-Then run:
-
-```bash
-beervid --help
-```
 
 ## Notes
 

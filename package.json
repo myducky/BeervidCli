@@ -2,12 +2,38 @@
   "name": "beervid-cli",
   "version": "0.1.0",
   "description": "Zero-dependency CLI for the Beervid Open API",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/myducky/BeervidCli.git"
+  },
+  "homepage": "https://github.com/myducky/BeervidCli#readme",
+  "bugs": {
+    "url": "https://github.com/myducky/BeervidCli/issues"
+  },
+  "keywords": [
+    "beervid",
+    "cli",
+    "tiktok",
+    "video",
+    "open-api"
+  ],
   "bin": {
     "beervid": "./bin/beervid.js"
   },
   "type": "commonjs",
+  "files": [
+    "bin",
+    "src",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "preferGlobal": true,
   "scripts": {
     "start": "node ./bin/beervid.js",
-    "test:smoke": "node ./bin/beervid.js --help"
+    "test:smoke": "node ./bin/beervid.js --help",
+    "pack:check": "npm pack --dry-run"
   }
 }
