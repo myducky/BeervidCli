@@ -123,6 +123,7 @@ function printSubcommandHelp(topic) {
       "  techType=sora => segmentCount must be 1 (15s)",
       "  fragmentList length matches the number of UI chapters",
       "  videoScale accepts 9:16 or 16:9",
+      "  local paths in productReferenceImages/nineGridImages/portraitImages/bgmList/headVideo/endVideo are auto-uploaded",
     ],
     "video.tasks": [
       "Usage:",

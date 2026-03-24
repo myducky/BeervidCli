@@ -315,7 +315,7 @@ async function handleVideo(subcommand, rest, flags, config) {
   requireApiKey(config);
 
   if (subcommand === "create") {
-    const body = validateVideoCreatePayload(readJsonInput(flags));
+    const body = await prepareVideoCreatePayload(config, readJsonInput(flags), flags);
     const response = await apiRequest(config, {
       method: "POST",
       path: "/video-create",
@@ -428,7 +428,7 @@ async function handleVideo(subcommand, rest, flags, config) {
   }
 
   if (subcommand === "run") {
-    const body = validateVideoCreatePayload(readJsonInput(flags));
+    const body = await prepareVideoCreatePayload(config, readJsonInput(flags), flags);
     const created = await apiRequest(config, {
       method: "POST",
       path: "/video-create",
@@ -883,6 +883,26 @@ function validateVideoCreatePayload(body) {
   return payload;
 }
 
+async function prepareVideoCreatePayload(config, body, flags = {}) {
+  const payload = validateVideoCreatePayload(body);
+  const prepared = cloneJson(payload);
+
+  await replaceUploadFieldWithUrls(config, prepared, "bgmList", "audio", flags);
+  await replaceUploadFieldWithUrl(config, prepared, "headVideo", "video", flags);
+  await replaceUploadFieldWithUrl(config, prepared, "endVideo", "video", flags);
+
+  if (Array.isArray(prepared.fragmentList)) {
+    for (const fragment of prepared.fragmentList) {
+      if (!fragment || typeof fragment !== "object") continue;
+      await replaceUploadFieldWithUrls(config, fragment, "productReferenceImages", "image", flags);
+      await replaceUploadFieldWithUrls(config, fragment, "nineGridImages", "image", flags);
+      await replaceUploadFieldWithUrls(config, fragment, "portraitImages", "image", flags);
+    }
+  }
+
+  return prepared;
+}
+
 function normalizeVideoCreatePayload(body) {
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     return body;
@@ -894,6 +914,66 @@ function normalizeVideoCreatePayload(body) {
     return body.request;
   }
   return body;
+}
+
+async function replaceUploadFieldWithUrls(config, target, field, fileType, flags = {}) {
+  if (!Array.isArray(target[field])) return;
+  const uploaded = [];
+  for (const item of target[field]) {
+    uploaded.push(await maybeUploadPayloadAsset(config, item, fileType, flags));
+  }
+  target[field] = uploaded;
+}
+
+async function replaceUploadFieldWithUrl(config, target, field, fileType, flags = {}) {
+  if (target[field] == null || target[field] === "") return;
+  target[field] = await maybeUploadPayloadAsset(config, target[field], fileType, flags);
+}
+
+async function maybeUploadPayloadAsset(config, value, fileType, flags = {}) {
+  if (typeof value !== "string") return value;
+  const filePath = resolveExistingLocalPath(value);
+  if (!filePath) return value;
+  if (!flags.quiet) {
+    console.error(`Uploading ${fileType}: ${filePath}`);
+  }
+  return uploadLocalFile(config, filePath, fileType);
+}
+
+function resolveExistingLocalPath(value) {
+  if (typeof value !== "string" || value.trim() === "") return null;
+  if (/^https?:\/\//i.test(value)) return null;
+  const candidates = [path.resolve(value)];
+  if (value.startsWith("~/")) {
+    candidates.push(path.join(require("os").homedir(), value.slice(2)));
+  }
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
+async function uploadLocalFile(config, filePath, fileType) {
+  validateUploadFile(filePath, fileType);
+  const formData = new FormData();
+  formData.set("file", new Blob([fs.readFileSync(filePath)]), path.basename(filePath));
+  formData.set("fileType", fileType);
+  const response = await apiRequest(config, {
+    method: "POST",
+    path: "/video-create/upload",
+    formData,
+  });
+  const fileUrl = findDeepValue(response.data, ["fileUrl", "url"]);
+  if (!fileUrl) {
+    fail(`Upload succeeded but no fileUrl was returned for: ${filePath}`, 5);
+  }
+  return fileUrl;
+}
+
+function cloneJson(value) {
+  return value == null ? value : JSON.parse(JSON.stringify(value));
 }
 
 async function getTask(config, taskId, flags) {

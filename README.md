@@ -51,6 +51,7 @@ beervid --help
 ## Notes
 
 - `video create` accepts raw open-API request bodies plus older `formData`/`request` wrappers and normalizes them before sending.
+- `video create` and `video run` will auto-upload local file paths found in `productReferenceImages`, `nineGridImages`, `portraitImages`, `bgmList`, `headVideo`, and `endVideo`, then replace them with the returned `fileUrl`.
 - `video publish` accepts either `businessId` or the older `accountId` alias and maps it to the open API shape.
 - `publish strategy create` accepts the raw open-API request body plus the older `strategyCreateDTO` wrapper.
 - `video create` and `video run` now validate `techType`, `fragmentList`, `segmentCount`, and `spliceMethod` before sending the request.

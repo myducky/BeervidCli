@@ -1,0 +1,40 @@
+{
+  "name": "LG C5 65-inch living room share",
+  "techType": "veo",
+  "videoScale": "9:16",
+  "dialogueLanguage": "English (American accent)",
+  "globalControl": "Vertical iPhone 14 handheld visitor POV, lived-in modern apartment living room, sincere late-night friend visit vibe, realistic warm white ceiling downlights, subtle motion blur, slight breathing shake, natural exposure falloff, TV remains off with deep black reflective screen, no UI overlays, no recording indicators, no extra on-screen graphics, no second person visible, realistic consumer video rather than studio ad.",
+  "showTitle": false,
+  "showSubtitle": false,
+  "noBgmMusic": true,
+  "hdEnhancement": false,
+  "generatedQuantity": 1,
+  "fragmentList": [
+    {
+      "uid": "scene01",
+      "videoContent": "0-8 seconds. A candid handheld smartphone shot as if a female friend just came over after work and is casually filming. In a tidy but lived-in modern living room, an East Asian woman around 29 stands slightly to the left in front of a wall-mounted or perfectly wall-flush LG 65 Inch Class C5 Series TV, shown mostly front-on with a slight angle so the huge 65-inch scale is obvious next to her body. The TV must stay tightly attached to the wall with virtually zero gap and remain turned off, showing a deep pure-black mirror finish. The woman has shoulder-length dark brown hair with a few loose bangs, an oval face, straight nose bridge, natural brows, glossy rose-beige lips, fair skin with visible pores and slight natural oil shine around the nose. She wears an off-white chunky knit lounge sweater with a loose collar showing the collarbone and sleeves rolled to the elbows. Physical details in frame: a minimalist black remote on the TV cabinet, a half-peeled orange on the sofa side table, a half-open balcony sliding door in the background, an unopened tissue box near the edge of the TV cabinet, and a short visible black power cable. Warm recessed ceiling downlights create soft hair highlights, slight under-eye shadow, and uneven exposure on the wall. She looks just left of camera toward her friend and speaks quickly: This LG 65-inch TV is an absolute game changer for my movie nights. I can finally see every single stunning detail in perfect 4K resolution right now. Between seconds 3 and 5, she casually brushes a loose strand of hair and lightly bites her lower lip while thinking. The camera takes one tiny step forward with gentle vertical bob and slight focus drift between her and the TV, ending by hinting at the ultra-thin side frame.",
+      "productReferenceImages": [
+        "https://img1.baidu.com/it/u=2230552304,1286476494&fm=253&app=138&f=JPEG?w=500&h=750"
+      ],
+      "productReferenceDescription": "LG 65 Inch Class C5 Series OLED TV, extremely thin premium metal edge, giant 65-inch screen scale, perfectly wall-flush installation, screen off with deep glossy black reflective surface, premium modern living room television.",
+      "positivePrompt": "authentic social video, lived-in apartment, handheld phone realism, realistic OLED TV proportions, wall-flush TV installation, subtle motion blur, natural skin texture, premium but candid",
+      "negativePrompt": "screen UI, subtitles, overlays, recording icon, second person on camera, TV playing content, TV standing away from wall, large wall gap, showroom lighting, over-acted host, perfect symmetry, floating television, fantasy room",
+      "useCoverFrame": true,
+      "segmentCount": 1,
+      "spliceMethod": "SPLICE"
+    },
+    {
+      "uid": "scene02",
+      "videoContent": "8-16 seconds. Continue the exact same woman, outfit, living room, TV placement, and handheld visitor-phone perspective with strong identity consistency. She remains beside the same front-facing, wall-flush LG 65 Inch Class C5 Series TV. Her body naturally shifts weight toward the screen, she blinks twice quickly, leans slightly toward the TV, and smiles with an infectious but unforced expression while speaking fast in a sincere recommendation tone: Plus, OLED evo tech makes colors pop like crazy. WebOS is super easy to use. If you need an upgrade, click the link right now! An off-camera friend responds from outside frame only: So high-end. Between seconds 12 and 14, the woman straightens slightly and gently taps the ultra-thin metal side bezel with her finger knuckle, then rests her palm on the frame to feel the smooth metal texture and nods with satisfaction. In the last 2 seconds, the handheld camera retreats slightly with a tiny laugh-induced wobble to reveal the full imposing 65-inch TV and her hand indicating the lower-right part of the screen area. The TV must remain off, front-visible, huge in scale, and tightly flush to the wall with no visible gap.",
+      "productReferenceImages": [
+        "https://img1.baidu.com/it/u=2230552304,1286476494&fm=253&app=138&f=JPEG?w=500&h=750"
+      ],
+      "productReferenceDescription": "Same LG 65 Inch Class C5 Series OLED TV as previous segment, maintain exact placement, exact size proportions, ultra-thin side profile, wall-flush installation, premium dark mirror-like off screen.",
+      "positivePrompt": "consistent character identity, consistent room continuity, realistic product interaction, ultra-thin bezel, natural body language, candid recommendation, premium OLED television realism",
+      "negativePrompt": "screen UI, subtitles, overlays, recording icon, second visible character, TV content playback, wall gap behind TV, detached television, studio commercial blocking, exaggerated pointing at lens, spinning movement over 30 degrees",
+      "useCoverFrame": true,
+      "segmentCount": 1,
+      "spliceMethod": "SPLICE"
+    }
+  ]
+}
