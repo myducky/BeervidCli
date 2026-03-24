@@ -32,9 +32,12 @@ node ./bin/beervid.js publish records
 ## Video Create Rules
 
 - `techType: "veo"` means the cinematic model. In each `fragmentList` item, `segmentCount` maps to duration: `1=8s`, `2=16s`, `3=24s`, `4=32s`.
-- `techType: "sora"` means the realistic model. Each fragment must use `segmentCount: 1`, which corresponds to `15s`.
+- `techType: "sora"`, `sora_azure`, `sora_h_pro`, and `sora_aio` use the SORA family rules. Each fragment must use `segmentCount: 1`.
 - `fragmentList.length` matches the number of UI chapters or scenes. Two 8-second VEO scenes should be modeled as two fragment objects with `segmentCount: 1` each.
 - `videoScale` controls aspect ratio and accepts `9:16` or `16:9`.
+- `portraitImages` is VEO-only, allows at most 1 image, and requires `useCoverFrame: true` when `videoScale` is `9:16`.
+- `productReferenceImages` allows at most 3 images for VEO and at most 1 image for each SORA-family fragment.
+- `spliceMethod: "LONG_TAKE"` is not allowed for SORA-family fragments or for VEO fragments when `segmentCount` is `1`.
 
 ## Install Locally
 

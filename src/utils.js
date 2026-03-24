@@ -120,9 +120,12 @@ function printSubcommandHelp(topic) {
       "",
       "Video Create Notes:",
       "  techType=veo  => segmentCount 1-4 maps to 8s/16s/24s/32s",
-      "  techType=sora => segmentCount must be 1 (15s)",
+      "  techType=sora/sora_azure/sora_h_pro/sora_aio => segmentCount must be 1",
       "  fragmentList length matches the number of UI chapters",
       "  videoScale accepts 9:16 or 16:9",
+      "  portraitImages is veo-only, max 1 image, and requires useCoverFrame=true for 9:16",
+      "  productReferenceImages max: veo=3, sora-family=1",
+      "  LONG_TAKE is not allowed for sora-family or veo segmentCount=1",
       "  local paths in productReferenceImages/nineGridImages/portraitImages/bgmList/headVideo/endVideo are auto-uploaded",
     ],
     "video.tasks": [

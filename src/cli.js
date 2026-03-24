@@ -1,4 +1,5 @@
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 const { loadConfig, saveApiKey, clearApiKey, getConfigPath } = require("./config");
 const { apiRequest, maskApiKey } = require("./http");
@@ -353,14 +354,21 @@ async function handleVideo(subcommand, rest, flags, config) {
     validateUploadFile(filePath, fileType);
 
     const formData = new FormData();
-    formData.set("file", new Blob([fs.readFileSync(filePath)]), path.basename(filePath));
+    formData.set(
+      "file",
+      new Blob([fs.readFileSync(filePath)], { type: mimeTypeForFileName(path.basename(filePath), fileType) }),
+      path.basename(filePath),
+    );
     formData.set("fileType", fileType);
     const response = await apiRequest(config, {
       method: "POST",
       path: "/video-create/upload",
       formData,
     });
-    const fileUrl = findDeepValue(response.data, ["fileUrl", "url"]);
+    if (response.data && (response.data.error === true || response.data.success === false || Number(response.data.code) !== 0)) {
+      fail(response.data.message || `Upload failed for: ${filePath}`, 4);
+    }
+    const fileUrl = findDeepValue(response.data, ["fileUrl", "url", "data"]);
     formatOutput({
       flags,
       command: "video.upload",
@@ -835,15 +843,17 @@ function validateVideoCreatePayload(body) {
     fail("Video create payload must be a JSON object.", 1);
   }
 
-  const { techType, fragmentList } = payload;
+  const { techType, fragmentList, videoScale } = payload;
   if (!techType) return payload;
-  if (!["veo", "sora"].includes(techType)) {
-    fail("video create techType must be one of: veo, sora", 1);
+  if (!["veo", "sora", "sora_azure", "sora_h_pro", "sora_aio"].includes(techType)) {
+    fail("video create techType must be one of: veo, sora, sora_azure, sora_h_pro, sora_aio", 1);
   }
 
   if (!Array.isArray(fragmentList) || fragmentList.length === 0) {
     fail("video create fragmentList must be a non-empty array.", 1);
   }
+
+  const isSoraFamily = techType !== "veo";
 
   fragmentList.forEach((fragment, index) => {
     const prefix = `fragmentList[${index}]`;
@@ -863,19 +873,43 @@ function validateVideoCreatePayload(body) {
       fail(`${prefix}.spliceMethod must be SPLICE or LONG_TAKE.`, 1);
     }
 
+    const productReferenceImages = Array.isArray(fragment.productReferenceImages) ? fragment.productReferenceImages : [];
+    const portraitImages = Array.isArray(fragment.portraitImages) ? fragment.portraitImages : [];
+
     if (techType === "veo" && (fragment.segmentCount < 1 || fragment.segmentCount > 4)) {
       fail(`${prefix}.segmentCount must be 1-4 for veo (1=8s, 2=16s, 3=24s, 4=32s).`, 1);
     }
 
-    if (techType === "sora") {
+    if (techType === "veo") {
+      if (productReferenceImages.length > 3) {
+        fail(`${prefix}.productReferenceImages allows at most 3 images for veo.`, 1);
+      }
+      if (portraitImages.length > 1) {
+        fail(`${prefix}.portraitImages allows at most 1 image for veo.`, 1);
+      }
+      if (videoScale === "9:16" && portraitImages.length > 0 && fragment.useCoverFrame !== true) {
+        fail(`${prefix}.useCoverFrame must be true for veo when videoScale is 9:16 and portraitImages is provided.`, 1);
+      }
+      if (fragment.segmentCount === 1 && fragment.spliceMethod === "LONG_TAKE") {
+        fail(`${prefix}.spliceMethod LONG_TAKE is not supported for veo when segmentCount is 1.`, 1);
+      }
+    }
+
+    if (isSoraFamily) {
+      if (productReferenceImages.length > 1) {
+        fail(`${prefix}.productReferenceImages allows at most 1 image for ${techType}.`, 1);
+      }
+      if (portraitImages.length > 0) {
+        fail(`${prefix}.portraitImages must be empty for ${techType}.`, 1);
+      }
       if (fragment.useCoverFrame === true) {
-        fail(`${prefix}.useCoverFrame must be false for sora.`, 1);
+        fail(`${prefix}.useCoverFrame must be false for ${techType}.`, 1);
       }
       if (fragment.segmentCount !== 1) {
-        fail(`${prefix}.segmentCount must be 1 for sora (15s).`, 1);
+        fail(`${prefix}.segmentCount must be 1 for ${techType}.`, 1);
       }
       if (fragment.spliceMethod === "LONG_TAKE") {
-        fail(`${prefix}.spliceMethod LONG_TAKE is not supported for sora.`, 1);
+        fail(`${prefix}.spliceMethod LONG_TAKE is not supported for ${techType}.`, 1);
       }
     }
   });
@@ -933,11 +967,19 @@ async function replaceUploadFieldWithUrl(config, target, field, fileType, flags 
 async function maybeUploadPayloadAsset(config, value, fileType, flags = {}) {
   if (typeof value !== "string") return value;
   const filePath = resolveExistingLocalPath(value);
-  if (!filePath) return value;
-  if (!flags.quiet) {
-    console.error(`Uploading ${fileType}: ${filePath}`);
+  if (filePath) {
+    if (!flags.quiet) {
+      console.error(`Uploading ${fileType}: ${filePath}`);
+    }
+    return uploadLocalFile(config, filePath, fileType);
   }
-  return uploadLocalFile(config, filePath, fileType);
+  if (isHttpUrl(value)) {
+    if (!flags.quiet) {
+      console.error(`Uploading ${fileType} from URL: ${value}`);
+    }
+    return uploadRemoteFile(config, value, fileType);
+  }
+  return value;
 }
 
 function resolveExistingLocalPath(value) {
@@ -956,24 +998,121 @@ function resolveExistingLocalPath(value) {
 }
 
 async function uploadLocalFile(config, filePath, fileType) {
+  const buffer = fs.readFileSync(filePath);
   validateUploadFile(filePath, fileType);
+  return uploadFileContents(config, buffer, path.basename(filePath), fileType, filePath, mimeTypeForFileName(path.basename(filePath), fileType));
+}
+
+async function uploadRemoteFile(config, sourceUrl, fileType) {
+  let response;
+  try {
+    response = await fetch(sourceUrl);
+  } catch (error) {
+    const wrapped = new Error(`Failed to download remote ${fileType}: ${error.message}`);
+    wrapped.exitCode = 4;
+    throw wrapped;
+  }
+  if (!response.ok) {
+    fail(`Failed to download remote ${fileType}: status ${response.status}`, 4);
+  }
+  const arrayBuffer = await response.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  const fileName = inferRemoteFileName(sourceUrl, response.headers.get("content-type"), fileType);
+  validateUploadBuffer(buffer, fileName, fileType);
+  return uploadFileContents(config, buffer, fileName, fileType, sourceUrl, mimeTypeForRemote(response.headers.get("content-type"), fileName, fileType));
+}
+
+async function uploadFileContents(config, buffer, fileName, fileType, sourceLabel, mimeType) {
   const formData = new FormData();
-  formData.set("file", new Blob([fs.readFileSync(filePath)]), path.basename(filePath));
+  formData.set("file", new Blob([buffer], { type: mimeType }), fileName);
   formData.set("fileType", fileType);
   const response = await apiRequest(config, {
     method: "POST",
     path: "/video-create/upload",
     formData,
   });
+  if (response.data && (response.data.error === true || response.data.success === false || Number(response.data.code) !== 0)) {
+    fail(response.data.message || `Upload failed for: ${sourceLabel}`, 4);
+  }
   const fileUrl = findDeepValue(response.data, ["fileUrl", "url"]);
   if (!fileUrl) {
-    fail(`Upload succeeded but no fileUrl was returned for: ${filePath}`, 5);
+    fail(`Upload succeeded but no fileUrl was returned for: ${sourceLabel}`, 5);
   }
   return fileUrl;
 }
 
 function cloneJson(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
+}
+
+function isHttpUrl(value) {
+  return /^https?:\/\//i.test(value);
+}
+
+function inferRemoteFileName(sourceUrl, contentType, fileType) {
+  const preferredExtension = extensionForContentType(contentType, fileType);
+  try {
+    const parsed = new URL(sourceUrl);
+    const rawName = path.basename(parsed.pathname);
+    const cleanedName = rawName && rawName !== "/" ? rawName : `${fileType}-upload`;
+    const currentExtension = path.extname(cleanedName).toLowerCase();
+    if (currentExtension && isSupportedUploadExtension(currentExtension, fileType)) return cleanedName;
+    const baseName = currentExtension ? cleanedName.slice(0, -currentExtension.length) : cleanedName;
+    return `${baseName}${preferredExtension}`;
+  } catch (_error) {
+    return `${fileType}-upload${preferredExtension}`;
+  }
+}
+
+function extensionForContentType(contentType, fileType) {
+  const normalized = String(contentType || "").toLowerCase();
+  if (normalized.includes("jpeg")) return ".jpg";
+  if (normalized.includes("png")) return ".png";
+  if (normalized.includes("mp4")) return ".mp4";
+  if (normalized.includes("quicktime")) return ".mov";
+  if (normalized.includes("mpeg")) return ".mp3";
+  if (normalized.includes("wav")) return ".wav";
+  const defaults = {
+    image: ".jpg",
+    video: ".mp4",
+    audio: ".mp3",
+  };
+  return defaults[fileType] || "";
+}
+
+function isSupportedUploadExtension(ext, fileType) {
+  const extensions = {
+    image: [".jpg", ".jpeg", ".png"],
+    video: [".mp4", ".mov"],
+    audio: [".wav", ".mp3"],
+  };
+  return (extensions[fileType] || []).includes(ext);
+}
+
+function mimeTypeForRemote(contentType, fileName, fileType) {
+  const normalized = String(contentType || "").toLowerCase().split(";")[0].trim();
+  if (normalized) return normalized;
+  return mimeTypeForFileName(fileName, fileType);
+}
+
+function mimeTypeForFileName(fileName, fileType) {
+  const ext = path.extname(fileName).toLowerCase();
+  const byExt = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".mp4": "video/mp4",
+    ".mov": "video/quicktime",
+    ".mp3": "audio/mpeg",
+    ".wav": "audio/wav",
+  };
+  if (byExt[ext]) return byExt[ext];
+  const defaults = {
+    image: "image/jpeg",
+    video: "video/mp4",
+    audio: "audio/mpeg",
+  };
+  return defaults[fileType] || "application/octet-stream";
 }
 
 async function getTask(config, taskId, flags) {
@@ -1195,7 +1334,24 @@ async function resolveCreatorUserOpenId(config, flags) {
 
 function validateUploadFile(filePath, fileType) {
   const stats = fs.statSync(filePath);
-  const ext = path.extname(filePath).toLowerCase();
+  return validateUploadMeta({
+    size: stats.size,
+    ext: path.extname(filePath).toLowerCase(),
+    fileType,
+    sourceLabel: filePath,
+  });
+}
+
+function validateUploadBuffer(buffer, fileName, fileType) {
+  return validateUploadMeta({
+    size: buffer.length,
+    ext: path.extname(fileName).toLowerCase(),
+    fileType,
+    sourceLabel: fileName,
+  });
+}
+
+function validateUploadMeta({ size, ext, fileType, sourceLabel }) {
   const limits = {
     image: { maxSize: 7 * 1024 * 1024, extensions: [".jpg", ".jpeg", ".png"] },
     video: { maxSize: 10 * 1024 * 1024, extensions: [".mp4", ".mov"] },
@@ -1203,10 +1359,10 @@ function validateUploadFile(filePath, fileType) {
   };
   const rule = limits[fileType];
   if (!rule.extensions.includes(ext)) {
-    fail(`Unsupported ${fileType} extension: ${ext || "(none)"}`, 1);
+    fail(`Unsupported ${fileType} extension for ${sourceLabel}: ${ext || "(none)"}`, 1);
   }
-  if (stats.size > rule.maxSize) {
-    fail(`${fileType} file exceeds size limit of ${Math.floor(rule.maxSize / (1024 * 1024))}MB`, 1);
+  if (size > rule.maxSize) {
+    fail(`${fileType} file exceeds size limit of ${Math.floor(rule.maxSize / (1024 * 1024))}MB: ${sourceLabel}`, 1);
   }
 }
 
