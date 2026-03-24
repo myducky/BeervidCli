@@ -1,7 +1,5 @@
 {
-  "request": {
-    "current": 1,
-    "size": 20,
-    "accountId": "account_xxx"
-  }
+  "creatorUserOpenId": "creator_open_id_xxx",
+  "current": 1,
+  "size": 20
 }

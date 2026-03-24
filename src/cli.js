@@ -98,9 +98,13 @@ async function handleAuth(subcommand, rest, flags, config) {
     }
     case "test": {
       requireApiKey(config);
-      const response = await apiRequest(config, {
+      const checkResponse = await apiRequest(config, {
         method: "GET",
-        path: "/templates/options",
+        path: "/check",
+      });
+      const profileResponse = await apiRequest(config, {
+        method: "GET",
+        path: "/profile",
       });
       formatOutput({
         flags,
@@ -108,11 +112,53 @@ async function handleAuth(subcommand, rest, flags, config) {
         data: {
           ok: true,
           baseUrl: config.baseUrl,
-          sample: response.data,
+          check: checkResponse.data,
+          profile: profileResponse.data,
         },
         textLines: [
           "Authentication test passed",
           `base_url: ${config.baseUrl}`,
+          `status: ${findDeepValue(checkResponse.data, ["status"]) || "authenticated"}`,
+          `username: ${findDeepValue(profileResponse.data, ["username"]) || findDeepValue(checkResponse.data, ["username"]) || "unknown"}`,
+        ],
+      });
+      return;
+    }
+    case "check": {
+      requireApiKey(config);
+      const response = await apiRequest(config, {
+        method: "GET",
+        path: "/check",
+      });
+      formatOutput({
+        flags,
+        command: "auth.check",
+        data: response.data,
+        textLines: [
+          "Authentication status",
+          `status: ${findDeepValue(response.data, ["status"]) || "unknown"}`,
+          `username: ${findDeepValue(response.data, ["username"]) || "unknown"}`,
+        ],
+      });
+      return;
+    }
+    case "profile": {
+      requireApiKey(config);
+      const response = await apiRequest(config, {
+        method: "GET",
+        path: "/profile",
+      });
+      formatOutput({
+        flags,
+        command: "auth.profile",
+        data: response.data,
+        textLines: [
+          "Profile",
+          `user_id: ${findDeepValue(response.data, ["userId"]) || "unknown"}`,
+          `username: ${findDeepValue(response.data, ["username"]) || "unknown"}`,
+          `email: ${findDeepValue(response.data, ["email"]) || "-"}`,
+          `membership: ${findDeepValue(response.data, ["membershipTierCode"]) || "-"}`,
+          `api_key_name: ${findDeepValue(response.data, ["apiKeyName"]) || "-"}`,
         ],
       });
       return;
@@ -139,7 +185,8 @@ async function handleAccounts(subcommand, flags, config) {
     const query = {};
     copyOptionalFlag(flags, query, "current");
     copyOptionalFlag(flags, query, "size");
-    copyOptionalFlag(flags, query, "shoppable-type", "shoppableType");
+    copyOptionalFlag(flags, query, "keyword");
+    query.shoppableType = flags["shoppable-type"] || "ALL";
     const response = await apiRequest(config, {
       method: "GET",
       path: "/tt-accounts",
@@ -154,10 +201,10 @@ async function handleAccounts(subcommand, flags, config) {
         `${records.length} accounts found`,
         "",
         ...records.map((record) => {
-          const id = record.id || record.accountId || "-";
+          const id = record.businessId || record.id || record.accountId || "-";
           const name = record.displayName || record.name || "-";
-          const shoppable = record.hasShoppingCart;
-          return `- ${id}  ${name}   shoppable=${String(Boolean(shoppable))}`;
+          const openId = record.creatorUserOpenId || "-";
+          return `- ${id}  ${name}   creator_user_open_id=${openId}`;
         }),
       ],
     });
@@ -168,9 +215,14 @@ async function handleAccounts(subcommand, flags, config) {
     const response = await apiRequest(config, {
       method: "GET",
       path: "/tt-accounts",
-      query: { current: flags.current || 1, size: flags.size || 50, shoppableType: "ALL" },
+      query: {
+        current: flags.current || 1,
+        size: flags.size || 50,
+        keyword: flags.keyword,
+        shoppableType: "TTS",
+      },
     });
-    const records = findRecords(response.data).filter((item) => item.hasShoppingCart === true);
+    const records = findRecords(response.data);
     formatOutput({
       flags,
       command: "accounts.shoppable",
@@ -213,33 +265,57 @@ async function handleLabels(subcommand, flags, config) {
 
 async function handleTemplates(subcommand, flags, config) {
   requireApiKey(config);
-  if (subcommand !== "list") {
-    printSubcommandHelp("templates");
+
+  if (subcommand === "list") {
+    const response = await apiRequest(config, {
+      method: "GET",
+      path: "/templates/options",
+    });
+    const records = findRecords(response.data);
+    formatOutput({
+      flags,
+      command: "templates.list",
+      data: response.data,
+      textLines: [
+        `${records.length} templates found`,
+        "",
+        ...records.map((record) => `- ${record.value || record.id || record.templateId || "-"}  ${record.label || record.name || record.templateName || "-"}`),
+      ],
+    });
     return;
   }
 
-  const response = await apiRequest(config, {
-    method: "GET",
-    path: "/templates/options",
-  });
-  const records = findRecords(response.data);
-  formatOutput({
-    flags,
-    command: "templates.list",
-    data: response.data,
-    textLines: [
-      `${records.length} templates found`,
-      "",
-      ...records.map((record) => `- ${record.id || record.templateId || "-"}  ${record.name || record.templateName || "-"}`),
-    ],
-  });
+  if (subcommand === "get") {
+    const id = flags.id;
+    if (!id) fail("Usage: beervid templates get --id <template_id>", 1);
+    const response = await apiRequest(config, {
+      method: "GET",
+      path: `/templates/${id}`,
+    });
+    const data = response.data && response.data.data ? response.data.data : response.data;
+    formatOutput({
+      flags,
+      command: "templates.get",
+      data: response.data,
+      textLines: [
+        "Template details",
+        `template_id: ${id}`,
+        `name: ${findDeepValue(data, ["name", "label"]) || "unknown"}`,
+        `tech_type: ${findDeepValue(data, ["techType"]) || "-"}`,
+        `video_scale: ${findDeepValue(data, ["videoScale"]) || "-"}`,
+      ],
+    });
+    return;
+  }
+
+  printSubcommandHelp("templates");
 }
 
 async function handleVideo(subcommand, rest, flags, config) {
   requireApiKey(config);
 
   if (subcommand === "create") {
-    const body = readJsonInput(flags);
+    const body = validateVideoCreatePayload(readJsonInput(flags));
     const response = await apiRequest(config, {
       method: "POST",
       path: "/video-create",
@@ -274,6 +350,7 @@ async function handleVideo(subcommand, rest, flags, config) {
     if (!fs.existsSync(filePath)) {
       fail(`File not found: ${filePath}`, 1);
     }
+    validateUploadFile(filePath, fileType);
 
     const formData = new FormData();
     formData.set("file", new Blob([fs.readFileSync(filePath)]), path.basename(filePath));
@@ -305,7 +382,7 @@ async function handleVideo(subcommand, rest, flags, config) {
   if (subcommand === "list") {
     const body = flags.file || flags.stdin
       ? readJsonInput(flags)
-      : { request: buildListRequest(flags) };
+      : buildVideoLibraryListRequest(flags);
     const response = await apiRequest(config, {
       method: "POST",
       path: "/videos/library/list",
@@ -326,7 +403,7 @@ async function handleVideo(subcommand, rest, flags, config) {
   }
 
   if (subcommand === "publish") {
-    const body = readJsonInput(flags);
+    const body = normalizeVideoPublishPayload(readJsonInput(flags));
     const response = await apiRequest(config, {
       method: "POST",
       path: "/videos/library/publish",
@@ -351,7 +428,7 @@ async function handleVideo(subcommand, rest, flags, config) {
   }
 
   if (subcommand === "run") {
-    const body = readJsonInput(flags);
+    const body = validateVideoCreatePayload(readJsonInput(flags));
     const created = await apiRequest(config, {
       method: "POST",
       path: "/video-create",
@@ -363,7 +440,7 @@ async function handleVideo(subcommand, rest, flags, config) {
     const listed = await apiRequest(config, {
       method: "POST",
       path: "/videos/library/list",
-      body: { request: buildListRequest(flags) },
+      body: buildVideoLibraryListRequest(flags),
     });
     const records = findRecords(listed.data);
     formatOutput({
@@ -436,7 +513,7 @@ async function handleVideoTasks(subcommand, flags, config) {
       textLines: [
         `${records.length} tasks found`,
         "",
-        ...records.map((record) => `- ${record.id || record.taskId || "-"}  ${record.status || "-"}`),
+        ...records.map((record) => `- ${record.id || record.taskId || "-"}  ${formatTaskStatus(record)}`),
       ],
     });
     return;
@@ -453,7 +530,7 @@ async function handleVideoTasks(subcommand, flags, config) {
       textLines: [
         "Task status",
         `task_id: ${taskId}`,
-        `status: ${task.status || "unknown"}`,
+        `status: ${formatTaskStatus(task)}`,
         ...(task.progress != null ? [`progress: ${task.progress}`] : []),
         ...(task.errorMessage ? [`reason: ${task.errorMessage}`] : []),
       ],
@@ -465,14 +542,14 @@ async function handleVideoTasks(subcommand, flags, config) {
     const taskId = flags["task-id"];
     if (!taskId) fail("Usage: beervid video tasks watch --task-id <task_id>", 1);
     const task = await watchTask(config, taskId, flags);
-    const done = isSuccessStatus(task.status);
+    const done = isSuccessStatus(task);
     formatOutput({
       flags,
       command: "video.tasks.watch",
       data: task,
       textLines: done
-        ? ["Task completed", `task_id: ${taskId}`, `status: ${task.status || "success"}`]
-        : ["Task failed", `task_id: ${taskId}`, `status: ${task.status || "failed"}`, ...(task.errorMessage ? [`reason: ${task.errorMessage}`] : [])],
+        ? ["Task completed", `task_id: ${taskId}`, `status: ${formatTaskStatus(task)}`]
+        : ["Task failed", `task_id: ${taskId}`, `status: ${formatTaskStatus(task)}`, ...(task.errorMessage ? [`reason: ${task.errorMessage}`] : [])],
     });
     if (!done) process.exitCode = 5;
     return;
@@ -485,10 +562,14 @@ async function handlePublish(subcommand, rest, flags, config) {
   requireApiKey(config);
 
   if (subcommand === "products") {
-    const accountId = flags["account-id"];
+    const creatorUserOpenId = await resolveCreatorUserOpenId(config, flags);
     const body = flags.file || flags.stdin
       ? readJsonInput(flags)
-      : { request: { ...buildListRequest(flags), ...(accountId ? { accountId } : {}) } };
+      : {
+          current: Number(flags.current || 1),
+          size: Number(flags.size || 10),
+          creatorUserOpenId,
+        };
     const response = await apiRequest(config, {
       method: "POST",
       path: "/shop-products/list",
@@ -500,9 +581,9 @@ async function handlePublish(subcommand, rest, flags, config) {
       command: "publish.products",
       data: response.data,
       textLines: [
-        `${records.length} products found${accountId ? ` for account ${accountId}` : ""}`,
+        `${records.length} products found${creatorUserOpenId ? ` for creator ${creatorUserOpenId}` : ""}`,
         "",
-        ...records.map((record) => `- ${record.id || record.productId || "-"}  ${record.name || record.productName || "-"}`),
+        ...records.map((record) => `- ${record.id || record.productId || "-"}  ${record.title || record.name || record.productName || "-"}`),
       ],
     });
     return;
@@ -515,7 +596,7 @@ async function handlePublish(subcommand, rest, flags, config) {
   if (subcommand === "records") {
     const body = flags.file || flags.stdin
       ? readJsonInput(flags)
-      : { request: { ...buildListRequest(flags), ...(flags.status ? { status: flags.status } : {}), ...(flags["account-id"] ? { accountId: flags["account-id"] } : {}) } };
+      : buildSendRecordsRequest(flags);
     const response = await apiRequest(config, {
       method: "POST",
       path: "/send-records/list",
@@ -546,7 +627,7 @@ async function handlePublish(subcommand, rest, flags, config) {
     const created = await apiRequest(config, {
       method: "POST",
       path: "/strategies/create",
-      body,
+      body: normalizeStrategyPayload(body),
     });
     const strategyId = findStrategyId(created.data);
     if (!strategyId) fail("Unable to determine strategy_id from create response", 5);
@@ -573,7 +654,7 @@ async function handlePublishStrategy(subcommand, flags, config) {
     const response = await apiRequest(config, {
       method: "POST",
       path: "/strategies/list",
-      body: { request: buildListRequest(flags) },
+      body: buildStrategyListRequest(flags),
     });
     const records = findRecords(response.data);
     formatOutput({
@@ -619,7 +700,7 @@ async function handlePublishStrategy(subcommand, flags, config) {
     const response = await apiRequest(config, {
       method: "POST",
       path: "/strategies/create",
-      body,
+      body: normalizeStrategyPayload(body),
     });
     const strategyId = findStrategyId(response.data);
     formatOutput({
@@ -642,7 +723,7 @@ async function handlePublishStrategy(subcommand, flags, config) {
   if (subcommand === "enable") {
     const id = flags.id;
     if (!id) fail("Usage: beervid publish strategy enable --id <strategy_id>", 1);
-    const response = await toggleStrategy(config, id);
+    const response = await toggleStrategy(config, id, true);
     const actualState = formatEnabledState(findEnabledState(response.data));
     formatOutput({
       flags,
@@ -660,7 +741,7 @@ async function handlePublishStrategy(subcommand, flags, config) {
   if (subcommand === "disable") {
     const id = flags.id;
     if (!id) fail("Usage: beervid publish strategy disable --id <strategy_id>", 1);
-    const response = await toggleStrategy(config, id);
+    const response = await toggleStrategy(config, id, false);
     const actualState = formatEnabledState(findEnabledState(response.data));
     formatOutput({
       flags,
@@ -748,6 +829,73 @@ function buildListRequest(flags) {
   return request;
 }
 
+function validateVideoCreatePayload(body) {
+  const payload = normalizeVideoCreatePayload(body);
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    fail("Video create payload must be a JSON object.", 1);
+  }
+
+  const { techType, fragmentList } = payload;
+  if (!techType) return payload;
+  if (!["veo", "sora"].includes(techType)) {
+    fail("video create techType must be one of: veo, sora", 1);
+  }
+
+  if (!Array.isArray(fragmentList) || fragmentList.length === 0) {
+    fail("video create fragmentList must be a non-empty array.", 1);
+  }
+
+  fragmentList.forEach((fragment, index) => {
+    const prefix = `fragmentList[${index}]`;
+    if (!fragment || typeof fragment !== "object" || Array.isArray(fragment)) {
+      fail(`${prefix} must be an object.`, 1);
+    }
+    if (typeof fragment.videoContent !== "string" || fragment.videoContent.trim() === "") {
+      fail(`${prefix}.videoContent is required.`, 1);
+    }
+    if (typeof fragment.useCoverFrame !== "boolean") {
+      fail(`${prefix}.useCoverFrame must be true or false.`, 1);
+    }
+    if (!Number.isInteger(fragment.segmentCount)) {
+      fail(`${prefix}.segmentCount must be an integer.`, 1);
+    }
+    if (!["SPLICE", "LONG_TAKE"].includes(fragment.spliceMethod)) {
+      fail(`${prefix}.spliceMethod must be SPLICE or LONG_TAKE.`, 1);
+    }
+
+    if (techType === "veo" && (fragment.segmentCount < 1 || fragment.segmentCount > 4)) {
+      fail(`${prefix}.segmentCount must be 1-4 for veo (1=8s, 2=16s, 3=24s, 4=32s).`, 1);
+    }
+
+    if (techType === "sora") {
+      if (fragment.useCoverFrame === true) {
+        fail(`${prefix}.useCoverFrame must be false for sora.`, 1);
+      }
+      if (fragment.segmentCount !== 1) {
+        fail(`${prefix}.segmentCount must be 1 for sora (15s).`, 1);
+      }
+      if (fragment.spliceMethod === "LONG_TAKE") {
+        fail(`${prefix}.spliceMethod LONG_TAKE is not supported for sora.`, 1);
+      }
+    }
+  });
+
+  return payload;
+}
+
+function normalizeVideoCreatePayload(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return body;
+  }
+  if (body.formData && typeof body.formData === "object") {
+    return body.formData;
+  }
+  if (body.request && typeof body.request === "object") {
+    return body.request;
+  }
+  return body;
+}
+
 async function getTask(config, taskId, flags) {
   const query = {};
   copyOptionalFlag(flags, query, "status");
@@ -769,11 +917,11 @@ async function watchTask(config, taskId, flags) {
   let attempt = 0;
   while (attempt < maxAttempts) {
     const task = await getTask(config, taskId, flags);
-    if (isTerminalStatus(task.status)) {
+    if (isTerminalStatus(task)) {
       return task;
     }
     if (!flags.quiet) {
-      console.error(`Watching task ${taskId}... status=${task.status || "unknown"} attempt=${attempt + 1}/${maxAttempts}`);
+      console.error(`Watching task ${taskId}... status=${formatTaskStatus(task)} attempt=${attempt + 1}/${maxAttempts}`);
     }
     attempt += 1;
     await sleep(intervalMs);
@@ -781,28 +929,52 @@ async function watchTask(config, taskId, flags) {
   fail(`Task timed out: ${taskId}`, 6);
 }
 
-function isTerminalStatus(status) {
-  if (!status) return false;
-  const normalized = String(status).toLowerCase();
-  return ["success", "completed", "failed", "error", "canceled", "cancelled", "2", "3"].includes(normalized);
+function isTerminalStatus(task) {
+  const normalized = normalizeTaskStatus(task);
+  if (!normalized) return false;
+  return ["success", "completed", "failed", "error", "canceled", "cancelled"].includes(normalized);
 }
 
-function isSuccessStatus(status) {
-  if (!status) return false;
-  const normalized = String(status).toLowerCase();
-  return ["success", "completed", "2"].includes(normalized);
+function isSuccessStatus(task) {
+  const normalized = normalizeTaskStatus(task);
+  if (!normalized) return false;
+  return ["success", "completed"].includes(normalized);
 }
 
-async function toggleStrategy(config, id) {
+function normalizeTaskStatus(task) {
+  const rawStatus = task && typeof task === "object" ? task.status : task;
+  if (rawStatus == null) return null;
+  const normalized = String(rawStatus).toLowerCase();
+
+  // Per the official Beervid docs:
+  // 0 = failed, 1 = success, 2 = processing
+  if (normalized === "0") return "failed";
+  if (normalized === "1") return "completed";
+  if (normalized === "2") return "processing";
+  if (["success", "completed", "failed", "error", "canceled", "cancelled", "processing", "pending", "running"].includes(normalized)) {
+    return normalized;
+  }
+  return normalized;
+}
+
+function formatTaskStatus(task) {
+  const rawStatus = task && typeof task === "object" ? task.status : task;
+  const normalized = normalizeTaskStatus(task);
+  if (!normalized) return "unknown";
+  if (normalized === String(rawStatus)) return normalized;
+  return `${rawStatus} (${normalized})`;
+}
+
+async function toggleStrategy(config, id, enable) {
   return apiRequest(config, {
     method: "POST",
     path: `/strategies/${id}/toggle`,
-    body: {},
+    body: { enable },
   });
 }
 
-function copyOptionalFlag(flags, target, from, to = from) {
-  if (flags[from] != null) target[to] = flags[from];
+function copyOptionalFlag(flags, target, from, to = from, mapValue = (value) => value) {
+  if (flags[from] != null) target[to] = mapValue(flags[from]);
 }
 
 function findRecords(data) {
@@ -814,7 +986,7 @@ function findRecords(data) {
 }
 
 function findTaskId(data) {
-  return findDeepValue(data, ["taskId", "task_id", "id"]);
+  return findDeepValue(data, ["taskId", "task_id", "id"]) || findTaskIdsFromMessage(data)[0] || null;
 }
 
 function findStrategyId(data) {
@@ -862,6 +1034,113 @@ function findDeepValue(input, keys) {
     }
   }
   return null;
+}
+
+function buildVideoLibraryListRequest(flags) {
+  const body = buildListRequest(flags);
+  copyOptionalFlag(flags, body, "name");
+  copyOptionalFlag(flags, body, "source-type", "sourceType");
+  copyOptionalCsvFlag(flags, body, "task-ids", "taskIds");
+  copyOptionalCsvFlag(flags, body, "strategy-ids", "strategyIds");
+  copyOptionalCsvFlag(flags, body, "business-ids", "businessIds");
+  copyOptionalCsvFlag(flags, body, "audit-status", "auditStatus", Number);
+  copyOptionalCsvFlag(flags, body, "label-ids", "labelIds");
+  copyOptionalCsvFlag(flags, body, "date-range", "dateRange");
+  return body;
+}
+
+function buildStrategyListRequest(flags) {
+  const body = buildListRequest(flags);
+  copyOptionalFlag(flags, body, "name");
+  copyOptionalFlag(flags, body, "status", "status", Number);
+  copyOptionalCsvFlag(flags, body, "date-range", "dateRange");
+  copyOptionalFlag(flags, body, "sort");
+  copyOptionalFlag(flags, body, "order");
+  copyOptionalFlag(flags, body, "business-id", "businessId");
+  return body;
+}
+
+function buildSendRecordsRequest(flags) {
+  const body = buildListRequest(flags);
+  copyOptionalFlag(flags, body, "strategy-id", "strategyId");
+  copyOptionalFlag(flags, body, "business-id", "businessId");
+  copyOptionalFlag(flags, body, "status", "status", Number);
+  copyOptionalCsvFlag(flags, body, "work-type", "workType");
+  copyOptionalFlag(flags, body, "sort");
+  copyOptionalFlag(flags, body, "order");
+  copyOptionalFlag(flags, body, "start-time", "startTime");
+  copyOptionalFlag(flags, body, "end-time", "endTime");
+  return body;
+}
+
+function normalizeVideoPublishPayload(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return body;
+  const normalized = { ...body };
+  if (normalized.businessId == null && normalized.accountId != null) {
+    normalized.businessId = normalized.accountId;
+  }
+  return normalized;
+}
+
+function normalizeStrategyPayload(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return body;
+  return body.strategyCreateDTO && typeof body.strategyCreateDTO === "object"
+    ? body.strategyCreateDTO
+    : body;
+}
+
+async function resolveCreatorUserOpenId(config, flags) {
+  if (flags["creator-user-open-id"]) return flags["creator-user-open-id"];
+  if (!flags["account-id"]) {
+    fail("Usage: beervid publish products --creator-user-open-id <open_id> [--current <n>] [--size <n>]", 1);
+  }
+
+  const response = await apiRequest(config, {
+    method: "GET",
+    path: "/tt-accounts",
+    query: {
+      current: 1,
+      size: Number(flags.size || 100),
+      shoppableType: "ALL",
+    },
+  });
+  const record = findRecords(response.data).find((item) => (
+    item.businessId === flags["account-id"] || item.id === flags["account-id"] || item.accountId === flags["account-id"]
+  ));
+  if (!record || !record.creatorUserOpenId) {
+    fail(`Unable to resolve creatorUserOpenId for account: ${flags["account-id"]}`, 5);
+  }
+  return record.creatorUserOpenId;
+}
+
+function validateUploadFile(filePath, fileType) {
+  const stats = fs.statSync(filePath);
+  const ext = path.extname(filePath).toLowerCase();
+  const limits = {
+    image: { maxSize: 7 * 1024 * 1024, extensions: [".jpg", ".jpeg", ".png"] },
+    video: { maxSize: 10 * 1024 * 1024, extensions: [".mp4", ".mov"] },
+    audio: { maxSize: 5 * 1024 * 1024, extensions: [".wav", ".mp3"] },
+  };
+  const rule = limits[fileType];
+  if (!rule.extensions.includes(ext)) {
+    fail(`Unsupported ${fileType} extension: ${ext || "(none)"}`, 1);
+  }
+  if (stats.size > rule.maxSize) {
+    fail(`${fileType} file exceeds size limit of ${Math.floor(rule.maxSize / (1024 * 1024))}MB`, 1);
+  }
+}
+
+function copyOptionalCsvFlag(flags, target, from, to = from, mapValue = (value) => value) {
+  if (flags[from] == null) return;
+  target[to] = String(flags[from]).split(",").map((value) => mapValue(value.trim())).filter((value) => value !== "");
+}
+
+function findTaskIdsFromMessage(data) {
+  const message = findDeepValue(data, ["message"]);
+  if (typeof message !== "string") return [];
+  const matches = message.match(/[A-Za-z0-9_-]{8,}/g);
+  if (!matches) return [];
+  return matches.filter((value) => value.toLowerCase() !== "success");
 }
 
 module.exports = { main };

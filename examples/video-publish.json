@@ -1,8 +1,5 @@
 {
   "videoId": "video_xxx",
-  "accountId": "account_xxx",
-  "caption": "Check out our latest product demo",
-  "labelIds": [
-    "label_xxx"
-  ]
+  "businessId": "account_xxx",
+  "productAnchorStatus": false
 }

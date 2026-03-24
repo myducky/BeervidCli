@@ -1,6 +1,5 @@
 {
-  "request": {
-    "current": 1,
-    "size": 20
-  }
+  "current": 1,
+  "size": 20,
+  "status": 3
 }

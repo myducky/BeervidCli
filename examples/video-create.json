@@ -1,8 +1,26 @@
 {
-  "request": {
-    "templateId": "tpl_001",
-    "prompt": "Create a TikTok-style promo video for a kitchen product",
-    "language": "en",
-    "aspectRatio": "9:16"
-  }
+  "name": "Two-part VEO sample",
+  "techType": "veo",
+  "videoScale": "9:16",
+  "dialogueLanguage": "English (American accent)",
+  "showTitle": false,
+  "showSubtitle": false,
+  "noBgmMusic": true,
+  "generatedQuantity": 1,
+  "fragmentList": [
+    {
+      "uid": "scene01",
+      "videoContent": "Scene 1. Create an 8-second vertical product intro in a modern living room. Keep the camera handheld and natural.",
+      "useCoverFrame": false,
+      "segmentCount": 1,
+      "spliceMethod": "SPLICE"
+    },
+    {
+      "uid": "scene02",
+      "videoContent": "Scene 2. Create a second 8-second vertical follow-up shot that continues the same story and ends with a clear product highlight.",
+      "useCoverFrame": false,
+      "segmentCount": 1,
+      "spliceMethod": "SPLICE"
+    }
+  ]
 }

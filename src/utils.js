@@ -88,12 +88,14 @@ function printSubcommandHelp(topic) {
       "  beervid auth set-key <api_key>",
       "  beervid auth status",
       "  beervid auth test",
+      "  beervid auth check",
+      "  beervid auth profile",
       "  beervid auth clear",
     ],
     accounts: [
       "Usage:",
-      "  beervid accounts list [--current <n>] [--size <n>]",
-      "  beervid accounts shoppable",
+      "  beervid accounts list [--shoppable-type <ALL|TT|TTS>] [--keyword <text>] [--current <n>] [--size <n>]",
+      "  beervid accounts shoppable [--keyword <text>] [--current <n>] [--size <n>]",
     ],
     labels: [
       "Usage:",
@@ -102,6 +104,7 @@ function printSubcommandHelp(topic) {
     templates: [
       "Usage:",
       "  beervid templates list",
+      "  beervid templates get --id <template_id>",
     ],
     video: [
       "Usage:",
@@ -114,6 +117,12 @@ function printSubcommandHelp(topic) {
       "  beervid video publish --file <payload.json>",
       "  beervid video data get --id <publish_task_id>",
       "  beervid video run --file <payload.json>",
+      "",
+      "Video Create Notes:",
+      "  techType=veo  => segmentCount 1-4 maps to 8s/16s/24s/32s",
+      "  techType=sora => segmentCount must be 1 (15s)",
+      "  fragmentList length matches the number of UI chapters",
+      "  videoScale accepts 9:16 or 16:9",
     ],
     "video.tasks": [
       "Usage:",
@@ -123,7 +132,7 @@ function printSubcommandHelp(topic) {
     ],
     publish: [
       "Usage:",
-      "  beervid publish products --account-id <id>",
+      "  beervid publish products --creator-user-open-id <open_id>",
       "  beervid publish strategy list [--current <n>] [--size <n>]",
       "  beervid publish strategy get --id <strategy_id>",
       "  beervid publish strategy create --file <strategy.json>",
@@ -135,7 +144,7 @@ function printSubcommandHelp(topic) {
     ],
     "publish.strategy": [
       "Usage:",
-      "  beervid publish strategy list [--current <n>] [--size <n>]",
+      "  beervid publish strategy list [--name <text>] [--status <0|1>] [--business-id <id>] [--current <n>] [--size <n>]",
       "  beervid publish strategy get --id <strategy_id>",
       "  beervid publish strategy create --file <strategy.json>",
       "  beervid publish strategy enable --id <strategy_id>",
