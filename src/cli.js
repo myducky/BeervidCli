@@ -874,6 +874,7 @@ function validateVideoCreatePayload(body) {
     }
 
     const productReferenceImages = Array.isArray(fragment.productReferenceImages) ? fragment.productReferenceImages : [];
+    const nineGridImages = Array.isArray(fragment.nineGridImages) ? fragment.nineGridImages : [];
     const portraitImages = Array.isArray(fragment.portraitImages) ? fragment.portraitImages : [];
 
     if (techType === "veo" && (fragment.segmentCount < 1 || fragment.segmentCount > 4)) {
@@ -898,6 +899,12 @@ function validateVideoCreatePayload(body) {
     if (isSoraFamily) {
       if (productReferenceImages.length > 1) {
         fail(`${prefix}.productReferenceImages allows at most 1 image for ${techType}.`, 1);
+      }
+      if (nineGridImages.length > 9) {
+        fail(`${prefix}.nineGridImages allows at most 9 images for ${techType}.`, 1);
+      }
+      if ((nineGridImages.length > 0 && productReferenceImages.length === 0) || (productReferenceImages.length > 0 && nineGridImages.length === 0)) {
+        fail(`${prefix}.nineGridImages and productReferenceImages must both be provided or both be empty for ${techType}.`, 1);
       }
       if (portraitImages.length > 0) {
         fail(`${prefix}.portraitImages must be empty for ${techType}.`, 1);

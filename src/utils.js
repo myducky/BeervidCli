@@ -125,6 +125,7 @@ function printSubcommandHelp(topic) {
       "  videoScale accepts 9:16 or 16:9",
       "  portraitImages is veo-only, max 1 image, and requires useCoverFrame=true for 9:16",
       "  productReferenceImages max: veo=3, sora-family=1",
+      "  nineGridImages max: sora-family=9, and it must be paired with productReferenceImages",
       "  LONG_TAKE is not allowed for sora-family or veo segmentCount=1",
       "  local paths in productReferenceImages/nineGridImages/portraitImages/bgmList/headVideo/endVideo are auto-uploaded",
     ],

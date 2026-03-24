@@ -1,0 +1,23 @@
+{
+  "name": "LG C5 65-inch verbatim user prompt 16s",
+  "techType": "veo",
+  "videoScale": "9:16",
+  "dialogueLanguage": "English (American accent)",
+  "showTitle": false,
+  "showSubtitle": false,
+  "noBgmMusic": true,
+  "hdEnhancement": false,
+  "generatedQuantity": 1,
+  "fragmentList": [
+    {
+      "uid": "lgc5verbatim16single",
+      "videoContent": "[ 维度零： 核心策略与脚本灵魂 (Global Strategy) ]\n* **核心幻觉**：构建一个“闺蜜深夜到家访谈，主角无意中安利刚换的超大屏OLED电视”。\n* **情感基调**：#真诚分享 #居家舒适 #生活质感\n* **视觉抓手 (Hook)**：开场即是广角俯视下的现代客厅一角，主角正随意地站在质感十足的纤薄电视柜前方偏左，身后紧贴墙壁挂装（或完美贴合墙面摆放）的LG 65 Inch Class C5 Series TV以正面偏微侧的角度完整露出，清晰直观地展现其65英寸的宏大视觉量感。\n\n[ 维度一： 基础设定与视觉基调 (Basic Settings) ]\n* **规格参数**\n* 时长：16秒 (严格分段：0-8s / 8-16s)\n* 画幅：9:16 竖屏全画幅\n* **摄影机语言 (Camera Personality)**\n* **视角来源 (POV)**：模拟朋友下班后来家里串门，随手举着手机录制对话。\n* **成像质感**：模拟iPhone 14级别手机原生画质。强调快门速度自动调节导致的轻微运动模糊，以及客厅灯光下电视超薄金属边框的真实漫反射。\n* **运镜缺陷美学**：手机镜头跟随主角说话时的身体起伏有轻微的呼吸感晃动。\n* **构图逻辑**：“三分法则偏离”——主角身体占据画面一侧，身后以正面为主的角度完整露出LG 65 Inch Class C5 Series TV，电视极其严密地贴墙摆放（或直接壁挂于墙面），与墙体几乎零距离贴合。LG 65 Inch Class C5 Series TV比例为大型客厅家电，正面视角充分凸显其稳重的视觉量感与1.65米对角线的巨大画幅，请特别注意人物与大尺寸正面屏幕的比例。\n* **场景与光影 (Scene & Lighting)**\n* **空间叙事 (Texture)**：一个充满生活气息且整洁的现代客厅。\n* **环境纹理 (必须包含至少3项具体的物理细节)**：1. 电视柜上放着的一个极简黑色遥控器 2. 沙发边几上半个剥开的橙子 3. 背景处半掩着的阳台推拉门。\n* **光影质感 (Lighting Imperfection)**：客厅顶部的嵌入式筒灯（暖白光），导致主角发丝有高光，但眼窝处留有极淡的自然阴影，背景墙面有轻微的曝光不均，电视屏幕关闭状态下呈现深邃的纯黑镜面感。\n\n[ 维度二： 角色与美术风格 (Character & Art) ]\n* **主角设定 (The \"Unpolished\" Protagonist)**\n* **物理形象 (强制清单 - 必须严格填充细节以保证人脸一致性)**：\n* **人种/年龄**：东亚女性，约29岁。\n* **发型发色**：深棕色齐肩中短发，发尾自然内扣，额前有几缕细碎的刘海，发质垂顺但可见生活化的微乱。\n* **面部特征**：典型的鹅蛋脸，鼻梁挺拔，野生眉，涂着自然的豆沙色亮面唇釉。\n* **生理状态**：皮肤白皙细腻但保留真实毛孔，鼻翼两侧在灯光下有轻微的生理性油脂反光。\n* **服化道细节**：\n* **着装状态**：一件米白色粗针织家居毛衣，领口微松，能看到锁骨，袖子随意挽在手肘处。\n* **产品植入 (Product Integration)**\n* **产品本体**：LG 65 Inch Class C5 Series TV\n* **物理交互**：LG 65 Inch Class C5 Series TV被主角用手指关节轻轻敲击超薄侧边边框。\n\n[ 维度三： 视觉真实感控制与负面清单 (Visual Realism & Negative Constraints) ]\n* **[ 关键：对抗AI“完美主义”与“影棚感”的强制原则 ]**\n1. **拒绝极简与整洁 (Anti-Minimalism)**: 电视柜边缘放着一盒没拆封的抽纸，侧边露出一段黑色的电源线，体现真实居住感。\n2. **拒绝完美布光 (Anti-Studio Lighting)**: 模拟单光源顶灯，不允许出现反光板补光的效果，阴影部分允许存在自然噪点。\n3. **去表演化 (Anti-Acting)**: 主角眼神避开镜头，看向镜头左侧的“朋友”，说话时身体伴随自然的重心切换。\n* **[ 技术负面清单 (Technical Negative List) ]**\n- 绝对禁止任何形式的屏幕叠加层、录制红点、UI图标\n- 绝对禁止电视不贴墙摆放，电视必须严丝合缝地贴靠墙面或直接壁挂，禁止电视与墙面之间有明显空隙，禁止电视移动位置\n- 禁止电视屏幕开启播放具体影视内容，禁止任何复杂的系统界面操作\n- 禁止主角手部伸向镜头，禁止转圈幅度超过30度\n- 禁止“朋友”形象出镜，“朋友”始终位于画面外，只有声音\n\n[ 维度四： 表演与动作 (按时间轴) ]\n[第1段：00-08s | 核心：引起注意 (Attention) & 激发兴趣 (Interest)]\n- **开场画面**：主角站在正面展示且紧贴墙面的LG 65 Inch Class C5 Series TV前方偏侧一点的位置,面部朝向镜头，正跟画面外的“朋友”笑着吐槽家里旧电视画面太灰暗。\n- **微动作 (Micro-action)**：[03-05s] 主角下意识地用手拨弄了一下垂在脸侧的碎发，并轻轻咬了一下下唇，思考怎么描述新电视画质带来的震撼感。\n- **镜头动态**：镜头开场保持偏正面的视角以凸显电视的巨大画幅，模拟“朋友”走近一步，产生细微的纵向颠簸感，焦点在主角和正面展示的巨大65英寸屏幕之间游移，随后顺势带到侧面极窄的金属边框。\n\n\n[第2段：08-16s | 核心：建立欲望 (Desire) & 行动转化 (Action)]\n- **开场画面**：主角站在正面展示且紧贴墙面的LG 65 Inch Class C5 Series TV前方偏侧一点的位置,面部朝向镜头，正跟画面外的“朋友”笑着吐槽家里旧电视画面太灰暗。\n- [12-14s] *：主角直起身子，稍微转身用手指轻轻敲击电视侧面展示其超薄工艺。她用手掌贴在边框上感受温润的金属材质，并满意地配合口播点头。\n- **微动作 (Micro-action)**：快速眨了两下眼，身体略微向电视屏幕倾斜，嘴角上扬露出一个非常有感染力的笑容。\n- **镜头动态**：镜头伴随主角的笑声轻微抖动，并在最后2秒稍微后撤，完整露出65英寸电视紧贴墙面的庞大全貌和主角伸手指点屏幕右下方动作。\n\n[ 维度五： 对话与音频 (按时间轴) ]\n环境声基调：真实的室内客厅环境。\n[第1段：00-08s]\n- **主角 (开场就说话，语速极快)**: \"This LG 65-inch TV is an absolute game changer for my movie nights. I can finally see every single stunning detail in perfect 4K resolution right now.\"\n\n[第2段：08-16s]\n- **主角 (安利语气，语速极快)**: \"Plus, OLED evo tech makes colors pop like crazy. WebOS is super easy to use. If you need an upgrade, click the link right now!\"\n- **第二声音源 (画外音朋友)**: \"So high-end.\"",
+      "productReferenceImages": [
+        "https://copyright.bdstatic.com/vcg/creative/557448e673be91728535784b3f436bf7.eps@wm_1,k_cGljX2JqaHdhdGVyLmpwZw=="
+      ],
+      "useCoverFrame": false,
+      "segmentCount": 2,
+      "spliceMethod": "SPLICE"
+    }
+  ]
+}
