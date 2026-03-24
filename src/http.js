@@ -10,8 +10,19 @@ async function apiRequest(config, options) {
 
   const headers = {
     "X-API-KEY": config.apiKey,
+    ...(options.headers || {}),
   };
-  if (options.method !== "GET") headers["Content-Type"] = "application/json";
+  if (options.body != null && options.formData == null && options.rawBody == null) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const requestBody = options.formData != null
+    ? options.formData
+    : options.rawBody != null
+      ? options.rawBody
+      : options.body != null
+        ? JSON.stringify(options.body)
+        : undefined;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), config.timeout);
@@ -21,7 +32,7 @@ async function apiRequest(config, options) {
     response = await fetch(url, {
       method: options.method,
       headers,
-      body: options.body != null ? JSON.stringify(options.body) : undefined,
+      body: requestBody,
       signal: controller.signal,
     });
   } catch (error) {

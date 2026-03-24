@@ -62,6 +62,7 @@ function printHelp() {
       "Commands:",
       "  auth        Manage API key and connection",
       "  accounts    Query TikTok account information",
+      "  labels      Query video creation labels",
       "  templates   Query video templates",
       "  video       Manage video generation tasks and library",
       "  publish     Manage publishing workflows and records",
@@ -94,6 +95,10 @@ function printSubcommandHelp(topic) {
       "  beervid accounts list [--current <n>] [--size <n>]",
       "  beervid accounts shoppable",
     ],
+    labels: [
+      "Usage:",
+      "  beervid labels list",
+    ],
     templates: [
       "Usage:",
       "  beervid templates list",
@@ -101,10 +106,13 @@ function printSubcommandHelp(topic) {
     video: [
       "Usage:",
       "  beervid video create --file <payload.json>",
+      "  beervid video upload --path <file> --type <image|video|audio>",
       "  beervid video tasks get --task-id <task_id>",
       "  beervid video tasks list [--status <value>]",
       "  beervid video tasks watch --task-id <task_id>",
       "  beervid video list [--current <n>] [--size <n>]",
+      "  beervid video publish --file <payload.json>",
+      "  beervid video data get --id <publish_task_id>",
       "  beervid video run --file <payload.json>",
     ],
     "video.tasks": [
@@ -116,17 +124,27 @@ function printSubcommandHelp(topic) {
     publish: [
       "Usage:",
       "  beervid publish products --account-id <id>",
+      "  beervid publish strategy list [--current <n>] [--size <n>]",
+      "  beervid publish strategy get --id <strategy_id>",
       "  beervid publish strategy create --file <strategy.json>",
       "  beervid publish strategy enable --id <strategy_id>",
       "  beervid publish strategy disable --id <strategy_id>",
+      "  beervid publish strategy delete --id <strategy_id>",
       "  beervid publish records",
       "  beervid publish run --file <strategy.json>",
     ],
     "publish.strategy": [
       "Usage:",
+      "  beervid publish strategy list [--current <n>] [--size <n>]",
+      "  beervid publish strategy get --id <strategy_id>",
       "  beervid publish strategy create --file <strategy.json>",
       "  beervid publish strategy enable --id <strategy_id>",
       "  beervid publish strategy disable --id <strategy_id>",
+      "  beervid publish strategy delete --id <strategy_id>",
+    ],
+    raw: [
+      "Usage:",
+      "  beervid raw <get|post|put|patch|delete> <path> [--file payload.json]",
     ],
     completion: [
       "Usage:",

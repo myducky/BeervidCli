@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const { loadConfig, saveApiKey, clearApiKey, getConfigPath } = require("./config");
 const { apiRequest, maskApiKey } = require("./http");
 const {
@@ -35,6 +37,8 @@ async function main(argv) {
       return handleAuth(subcommand, rest, parsed.flags, config);
     case "accounts":
       return handleAccounts(subcommand, parsed.flags, config);
+    case "labels":
+      return handleLabels(subcommand, parsed.flags, config);
     case "templates":
       return handleTemplates(subcommand, parsed.flags, config);
     case "video":
@@ -183,6 +187,30 @@ async function handleAccounts(subcommand, flags, config) {
   printSubcommandHelp("accounts");
 }
 
+async function handleLabels(subcommand, flags, config) {
+  requireApiKey(config);
+  if (subcommand !== "list") {
+    printSubcommandHelp("labels");
+    return;
+  }
+
+  const response = await apiRequest(config, {
+    method: "GET",
+    path: "/video-create/labels",
+  });
+  const records = findRecords(response.data);
+  formatOutput({
+    flags,
+    command: "labels.list",
+    data: response.data,
+    textLines: [
+      `${records.length} labels found`,
+      "",
+      ...records.map((record) => `- ${record.id || record.labelId || "-"}  ${record.name || record.labelName || "-"}`),
+    ],
+  });
+}
+
 async function handleTemplates(subcommand, flags, config) {
   requireApiKey(config);
   if (subcommand !== "list") {
@@ -234,6 +262,42 @@ async function handleVideo(subcommand, rest, flags, config) {
     return;
   }
 
+  if (subcommand === "upload") {
+    const filePath = flags.path || flags.file;
+    const fileType = flags.type || flags["file-type"];
+    if (!filePath || !fileType) {
+      fail("Usage: beervid video upload --path <file> --type <image|video|audio>", 1);
+    }
+    if (!["image", "video", "audio"].includes(fileType)) {
+      fail("Upload type must be one of: image, video, audio", 1);
+    }
+    if (!fs.existsSync(filePath)) {
+      fail(`File not found: ${filePath}`, 1);
+    }
+
+    const formData = new FormData();
+    formData.set("file", new Blob([fs.readFileSync(filePath)]), path.basename(filePath));
+    formData.set("fileType", fileType);
+    const response = await apiRequest(config, {
+      method: "POST",
+      path: "/video-create/upload",
+      formData,
+    });
+    const fileUrl = findDeepValue(response.data, ["fileUrl", "url"]);
+    formatOutput({
+      flags,
+      command: "video.upload",
+      data: response.data,
+      textLines: [
+        "File uploaded successfully",
+        `file: ${path.resolve(filePath)}`,
+        `type: ${fileType}`,
+        ...(fileUrl ? [`file_url: ${fileUrl}`] : []),
+      ],
+    });
+    return;
+  }
+
   if (subcommand === "tasks") {
     return handleVideoTasks(rest[0], flags, config);
   }
@@ -259,6 +323,31 @@ async function handleVideo(subcommand, rest, flags, config) {
       ],
     });
     return;
+  }
+
+  if (subcommand === "publish") {
+    const body = readJsonInput(flags);
+    const response = await apiRequest(config, {
+      method: "POST",
+      path: "/videos/library/publish",
+      body,
+    });
+    const publishTaskId = findDeepValue(response.data, ["publishTaskId", "publish_task_id", "id"]);
+    formatOutput({
+      flags,
+      command: "video.publish",
+      data: response.data,
+      textLines: [
+        "Video publish request submitted",
+        `publish_task_id: ${publishTaskId || "unknown"}`,
+        `status: ${findStatus(response.data) || "submitted"}`,
+      ],
+    });
+    return;
+  }
+
+  if (subcommand === "data") {
+    return handleVideoData(rest[0], flags, config);
   }
 
   if (subcommand === "run") {
@@ -296,6 +385,36 @@ async function handleVideo(subcommand, rest, flags, config) {
   }
 
   printSubcommandHelp("video");
+}
+
+async function handleVideoData(subcommand, flags, config) {
+  if (subcommand !== "get") {
+    printSubcommandHelp("video");
+    return;
+  }
+
+  const id = flags.id;
+  if (!id) fail("Usage: beervid video data get --id <publish_task_id>", 1);
+  const response = await apiRequest(config, {
+    method: "GET",
+    path: `/video/publish-task/${id}`,
+  });
+
+  const data = response.data && response.data.data ? response.data.data : response.data;
+  formatOutput({
+    flags,
+    command: "video.data.get",
+    data: response.data,
+    textLines: [
+      "Video data",
+      `id: ${id}`,
+      ...(findDeepValue(data, ["playCount", "views"]) != null ? [`views: ${findDeepValue(data, ["playCount", "views"])}`] : []),
+      ...(findDeepValue(data, ["likeCount", "likes"]) != null ? [`likes: ${findDeepValue(data, ["likeCount", "likes"])}`] : []),
+      ...(findDeepValue(data, ["commentCount", "comments"]) != null ? [`comments: ${findDeepValue(data, ["commentCount", "comments"])}`] : []),
+      ...(findDeepValue(data, ["shareCount", "shares"]) != null ? [`shares: ${findDeepValue(data, ["shareCount", "shares"])}`] : []),
+      ...(findDeepValue(data, ["publishedAt"]) ? [`published_at: ${findDeepValue(data, ["publishedAt"])}`] : []),
+    ],
+  });
 }
 
 async function handleVideoTasks(subcommand, flags, config) {
@@ -432,6 +551,7 @@ async function handlePublish(subcommand, rest, flags, config) {
     const strategyId = findStrategyId(created.data);
     if (!strategyId) fail("Unable to determine strategy_id from create response", 5);
     const enabled = await toggleStrategy(config, strategyId);
+    const actualState = formatEnabledState(findEnabledState(enabled.data));
     formatOutput({
       flags,
       command: "publish.run",
@@ -439,7 +559,7 @@ async function handlePublish(subcommand, rest, flags, config) {
       textLines: [
         "Publish workflow completed",
         `strategy_id: ${strategyId}`,
-        "status: enabled",
+        `status: ${actualState || "unknown"}`,
       ],
     });
     return;
@@ -449,6 +569,51 @@ async function handlePublish(subcommand, rest, flags, config) {
 }
 
 async function handlePublishStrategy(subcommand, flags, config) {
+  if (subcommand === "list") {
+    const response = await apiRequest(config, {
+      method: "POST",
+      path: "/strategies/list",
+      body: { request: buildListRequest(flags) },
+    });
+    const records = findRecords(response.data);
+    formatOutput({
+      flags,
+      command: "publish.strategy.list",
+      data: response.data,
+      textLines: [
+        `${records.length} strategies found`,
+        "",
+        ...records.map((record) => {
+          const status = formatEnabledState(findEnabledState(record));
+          return `- ${record.id || record.strategyId || "-"}  ${record.name || record.strategyName || "-"}  ${status || "-"}`;
+        }),
+      ],
+    });
+    return;
+  }
+
+  if (subcommand === "get") {
+    const id = flags.id;
+    if (!id) fail("Usage: beervid publish strategy get --id <strategy_id>", 1);
+    const response = await apiRequest(config, {
+      method: "GET",
+      path: `/strategies/${id}`,
+    });
+    const data = response.data && response.data.data ? response.data.data : response.data;
+    formatOutput({
+      flags,
+      command: "publish.strategy.get",
+      data: response.data,
+      textLines: [
+        "Strategy details",
+        `strategy_id: ${id}`,
+        `name: ${findName(data) || "unknown"}`,
+        `status: ${formatEnabledState(findEnabledState(data)) || "unknown"}`,
+      ],
+    });
+    return;
+  }
+
   if (subcommand === "create") {
     const body = readJsonInput(flags);
     const response = await apiRequest(config, {
@@ -478,14 +643,15 @@ async function handlePublishStrategy(subcommand, flags, config) {
     const id = flags.id;
     if (!id) fail("Usage: beervid publish strategy enable --id <strategy_id>", 1);
     const response = await toggleStrategy(config, id);
+    const actualState = formatEnabledState(findEnabledState(response.data));
     formatOutput({
       flags,
       command: "publish.strategy.enable",
       data: response.data,
       textLines: [
-        "Strategy enabled successfully",
+        "Strategy toggle request completed",
         `strategy_id: ${id}`,
-        "status: enabled",
+        `status: ${actualState || "unknown"}`,
       ],
     });
     return;
@@ -495,14 +661,34 @@ async function handlePublishStrategy(subcommand, flags, config) {
     const id = flags.id;
     if (!id) fail("Usage: beervid publish strategy disable --id <strategy_id>", 1);
     const response = await toggleStrategy(config, id);
+    const actualState = formatEnabledState(findEnabledState(response.data));
     formatOutput({
       flags,
       command: "publish.strategy.disable",
       data: response.data,
       textLines: [
-        "Strategy disabled successfully",
+        "Strategy toggle request completed",
         `strategy_id: ${id}`,
-        "status: disabled",
+        `status: ${actualState || "unknown"}`,
+      ],
+    });
+    return;
+  }
+
+  if (subcommand === "delete") {
+    const id = flags.id;
+    if (!id) fail("Usage: beervid publish strategy delete --id <strategy_id>", 1);
+    const response = await apiRequest(config, {
+      method: "DELETE",
+      path: `/strategies/${id}`,
+    });
+    formatOutput({
+      flags,
+      command: "publish.strategy.delete",
+      data: response.data,
+      textLines: [
+        "Strategy deleted successfully",
+        `strategy_id: ${id}`,
       ],
     });
     return;
@@ -517,14 +703,14 @@ async function handleRaw(subcommand, rest, flags, config) {
   if (!path) fail("Usage: beervid raw <get|post> <path> [--file payload.json]", 1);
 
   const method = subcommand && subcommand.toUpperCase();
-  if (method !== "GET" && method !== "POST") {
-    fail("Usage: beervid raw <get|post> <path> [--file payload.json]", 1);
+  if (!["GET", "POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+    fail("Usage: beervid raw <get|post|put|patch|delete> <path> [--file payload.json]", 1);
   }
 
   const response = await apiRequest(config, {
     method,
     path: path.startsWith("/") ? path : `/${path}`,
-    body: method === "POST" ? readJsonInput(flags, { optional: true }) : undefined,
+    body: method === "GET" ? undefined : readJsonInput(flags, { optional: true }),
   });
 
   formatOutput({
@@ -541,8 +727,8 @@ function handleCompletion(subcommand) {
   }
   const scripts = {
     zsh: "#compdef beervid\n_arguments '*::arg:->args'",
-    bash: "complete -W 'auth accounts templates video publish raw completion' beervid",
-    fish: "complete -c beervid -f -a 'auth accounts templates video publish raw completion'",
+    bash: "complete -W 'auth accounts labels templates video publish raw completion' beervid",
+    fish: "complete -c beervid -f -a 'auth accounts labels templates video publish raw completion'",
   };
   process.stdout.write(`${scripts[subcommand]}\n`);
 }
@@ -641,6 +827,27 @@ function findStatus(data) {
 
 function findName(data) {
   return findDeepValue(data, ["name", "strategyName"]);
+}
+
+function findEnabledState(data) {
+  const value = findDeepValue(data, ["enabled", "isEnabled", "active", "status"]);
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") {
+    if (value === 1) return true;
+    if (value === 0) return false;
+  }
+  if (typeof value === "string") {
+    const normalized = value.toLowerCase();
+    if (["enabled", "enable", "active", "true", "1"].includes(normalized)) return true;
+    if (["disabled", "disable", "inactive", "false", "0"].includes(normalized)) return false;
+  }
+  return null;
+}
+
+function formatEnabledState(value) {
+  if (value === true) return "enabled";
+  if (value === false) return "disabled";
+  return null;
 }
 
 function findDeepValue(input, keys) {
