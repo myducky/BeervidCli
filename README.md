@@ -65,7 +65,8 @@ npx beervid-cli --help
 ## Notes
 
 - `video create` accepts raw open-API request bodies plus older `formData`/`request` wrappers and normalizes them before sending.
-- `video create` and `video run` will auto-upload local file paths found in `productReferenceImages`, `nineGridImages`, `portraitImages`, `bgmList`, `headVideo`, and `endVideo`, then replace them with the returned `fileUrl`.
+- `video create` and `video run` will auto-upload both local file paths and remote `http/https` URLs found in `productReferenceImages`, `nineGridImages`, `portraitImages`, `bgmList`, `headVideo`, and `endVideo`, then replace them with the returned `fileUrl` before submitting the task.
+- `headVideo` and `endVideo` correspond to the cover/opening video and ending video in the product UI flow, so they follow the same upload-then-submit behavior as product images, portrait images, and BGM.
 - `video publish` accepts either `businessId` or the older `accountId` alias and maps it to the open API shape.
 - `publish strategy create` accepts the raw open-API request body plus the older `strategyCreateDTO` wrapper.
 - `video create` and `video run` now validate `techType`, `fragmentList`, `segmentCount`, and `spliceMethod` before sending the request.

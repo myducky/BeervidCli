@@ -127,7 +127,7 @@ function printSubcommandHelp(topic) {
       "  productReferenceImages max: veo=3, sora-family=1",
       "  nineGridImages max: sora-family=9, and it must be paired with productReferenceImages",
       "  LONG_TAKE is not allowed for sora-family or veo segmentCount=1",
-      "  local paths in productReferenceImages/nineGridImages/portraitImages/bgmList/headVideo/endVideo are auto-uploaded",
+      "  local paths and remote URLs in productReferenceImages/nineGridImages/portraitImages/bgmList/headVideo/endVideo are auto-uploaded first",
     ],
     "video.tasks": [
       "Usage:",
