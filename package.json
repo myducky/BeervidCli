@@ -19,7 +19,7 @@
     "open-api"
   ],
   "bin": {
-    "beervid": "./bin/beervid.js"
+    "beervid": "bin/beervid.js"
   },
   "type": "commonjs",
   "files": [
