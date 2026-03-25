@@ -368,7 +368,7 @@ async function handleVideo(subcommand, rest, flags, config) {
     if (response.data && (response.data.error === true || response.data.success === false || Number(response.data.code) !== 0)) {
       fail(response.data.message || `Upload failed for: ${filePath}`, 4);
     }
-    const fileUrl = findDeepValue(response.data, ["fileUrl", "url", "data"]);
+    const fileUrl = findDeepValue(response.data, ["fileUrl", "url"]);
     formatOutput({
       flags,
       command: "video.upload",
@@ -1212,7 +1212,7 @@ function findRecords(data) {
 }
 
 function findTaskId(data) {
-  return findDeepValue(data, ["taskId", "task_id", "id"]) || findTaskIdsFromMessage(data)[0] || null;
+  return findDeepValue(data, ["taskId", "task_id", "id"]) || findTaskIdsDeep(data)[0] || null;
 }
 
 function findStrategyId(data) {
@@ -1378,19 +1378,33 @@ function copyOptionalCsvFlag(flags, target, from, to = from, mapValue = (value) 
   target[to] = String(flags[from]).split(",").map((value) => mapValue(value.trim())).filter((value) => value !== "");
 }
 
-function findTaskIdsFromMessage(data) {
-  const message = findDeepValue(data, ["message"]);
-  if (typeof message !== "string") return [];
-  const uuidLikeMatches = message.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi);
+function findTaskIdsDeep(input) {
+  if (typeof input === "string") {
+    return findTaskIdsFromString(input);
+  }
+  if (!input || typeof input !== "object") {
+    return [];
+  }
+
+  for (const value of Object.values(input)) {
+    const matches = findTaskIdsDeep(value);
+    if (matches.length > 0) return matches;
+  }
+
+  return [];
+}
+
+function findTaskIdsFromString(value) {
+  const uuidLikeMatches = value.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi);
   if (uuidLikeMatches && uuidLikeMatches.length > 0) return uuidLikeMatches;
 
-  const bracketMatches = message.match(/\[([^\]]+)\]/);
+  const bracketMatches = value.match(/\[([^\]]+)\]/);
   if (!bracketMatches) return [];
 
   return bracketMatches[1]
     .split(",")
-    .map((value) => value.trim())
-    .filter((value) => /^[A-Za-z0-9_-]{8,}$/.test(value));
+    .map((item) => item.trim())
+    .filter((item) => /^[A-Za-z0-9_-]{8,}$/.test(item));
 }
 
 module.exports = { main };
