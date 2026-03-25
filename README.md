@@ -31,24 +31,26 @@ node ./bin/beervid.js publish records
 
 ## Install
 
-Install from the local repo while iterating:
-
-```bash
-npm link
-beervid --help
-```
-
-Install from npm after publishing:
+Install from npm:
 
 ```bash
 npm install -g beervid-cli
-beervid auth status
+beervid --help
 ```
 
 Or run it without installing globally:
 
 ```bash
 npx beervid-cli --help
+npx beervid-cli auth set-key YOUR_API_KEY
+npx beervid-cli auth test
+```
+
+Install from the local repo while iterating:
+
+```bash
+npm link
+beervid --help
 ```
 
 ## Video Create Rules
