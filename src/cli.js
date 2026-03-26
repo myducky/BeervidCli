@@ -420,8 +420,15 @@ async function getTask(config, taskId, flags) {
 }
 
 async function watchTask(config, taskId, flags) {
+  const initialWaitMs = Math.max(0, Number(flags["initial-wait"] || 0)) * 1000;
   const intervalMs = Number(flags.interval || config.pollInterval || 5) * 1000;
   const maxAttempts = Number(flags["max-attempts"] || 120);
+  if (initialWaitMs > 0) {
+    if (!flags.quiet) {
+      console.error(`Waiting ${Math.floor(initialWaitMs / 1000)}s before first task check for ${taskId}...`);
+    }
+    await sleep(initialWaitMs);
+  }
   let attempt = 0;
   while (attempt < maxAttempts) {
     const task = await getTask(config, taskId, flags);

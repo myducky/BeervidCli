@@ -191,6 +191,8 @@
 | TC-VC-006 | video.create | 返回消息中无显式字段、仅 message 含 taskId | 模拟接口返回 message 中带 taskId | 执行创建 | 可从 message 提取 `task_id` |
 | TC-VC-007 | video.create | 文本模式输出 Next 提示 | 有效 Key | 执行创建 | 输出后续 `video tasks get` 建议命令 |
 | TC-VC-008 | video.create | JSON 模式输出 | 有效 Key | 追加 `--json` | 输出 JSON 且包含完整接口数据 |
+| TC-VC-009 | video.create | `fragmentList[].videoContent` 原文直传 | 准备包含中文、Markdown、占位符、首尾空白的请求 JSON | 执行创建前本地 normalize/helper tests，或对请求发送体做断言 | CLI 不改写、不翻译、不 trim、不总结用户视频描述 |
+| TC-VC-010 | video.run | 首次查询前延迟等待 | 有效 Key 与有效请求 | 执行 `video run --file payload.json --initial-wait 300` | 提交成功后先等待 300 秒，再开始首次状态查询，避免立即高频轮询 |
 
 #### 4.7.2 VEO 参数校验
 

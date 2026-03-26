@@ -130,6 +130,13 @@ If you want the CLI to do the create-and-watch flow in one command:
 node ./bin/beervid.js video run --file ./examples/video-create.json
 ```
 
+For real generation workloads, the platform commonly needs about 5-10 minutes. Prefer waiting about 5 minutes before the first status query instead of polling immediately:
+
+```bash
+node ./bin/beervid.js video tasks watch --task-id task_xxx --initial-wait 300
+node ./bin/beervid.js video run --file ./examples/video-create.json --initial-wait 300
+```
+
 ### Upload local or remote assets before create
 
 ```bash
@@ -181,6 +188,8 @@ node ./bin/beervid.js raw post /send-records/list --file ./examples/publish-reco
 - `productReferenceImages` allows at most 3 images for VEO and at most 1 image for each SORA-family fragment.
 - `nineGridImages` allows at most 9 images for each SORA-family fragment, and `nineGridImages` plus `productReferenceImages` must either both be provided or both be empty.
 - `spliceMethod: "LONG_TAKE"` is not allowed for SORA-family fragments or for VEO fragments when `segmentCount` is `1`.
+- `fragmentList[].videoContent` is treated as verbatim user input. The CLI must not rewrite, translate, trim, summarize, or otherwise alter the user's prompt text before submission.
+- Real generation commonly takes around 5-10 minutes, so a delayed first poll such as `--initial-wait 300` is recommended for `video tasks watch` and `video run`.
 
 ## Notes
 

@@ -40,6 +40,31 @@ test("normalizeVideoCreatePayload unwraps formData and request wrappers", () => 
   );
 });
 
+test("normalizeVideoCreatePayload preserves verbatim videoContent text", () => {
+  const verbatimPrompt = "$\n原文 prompt  不要改\nLine 2 with spaces  \n&&&xiaomi手机&&&\n$";
+
+  assert.deepEqual(
+    normalizeVideoCreatePayload({
+      request: {
+        techType: "veo",
+        fragmentList: [
+          {
+            videoContent: verbatimPrompt,
+          },
+        ],
+      },
+    }),
+    {
+      techType: "veo",
+      fragmentList: [
+        {
+          videoContent: verbatimPrompt,
+        },
+      ],
+    },
+  );
+});
+
 test("normalizeVideoPublishPayload maps accountId to businessId", () => {
   assert.deepEqual(
     normalizeVideoPublishPayload({ accountId: "acct_123", caption: "hello" }),
