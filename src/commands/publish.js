@@ -20,14 +20,17 @@ async function handlePublish(subcommand, rest, flags, config, deps) {
   requireApiKey(config);
 
   if (subcommand === "products") {
-    const creatorUserOpenId = await resolveCreatorUserOpenId(config, flags);
     const body = flags.file || flags.stdin
       ? readJsonInput(flags)
       : {
           current: Number(flags.current || 1),
           size: Number(flags.size || 10),
-          creatorUserOpenId,
+          creatorUserOpenId: await resolveCreatorUserOpenId(config, flags),
         };
+    const creatorUserOpenId =
+      body.creatorUserOpenId ||
+      flags["creator-user-open-id"] ||
+      null;
     const response = await apiRequest(config, {
       method: "POST",
       path: "/shop-products/list",

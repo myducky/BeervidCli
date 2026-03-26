@@ -311,6 +311,7 @@
 | 编号 | 模块 | 场景 | 前置条件 | 操作步骤 | 预期结果 |
 | --- | --- | --- | --- | --- | --- |
 | TC-VPUB-001 | video.publish | 用 `businessId` 发布成功 | 有效 videoId、businessId | 执行 `video publish --file examples/video-publish.json` | 返回 `publish_task_id` |
+| TC-VPUB-001A | video.publish | 示例文件占位值需先替换 | 使用仓库示例文件 | 检查 `examples/video-publish.json` | `videoId/businessId` 为 `__REPLACE_WITH_...__` 占位符，避免误以为可直接发布 |
 | TC-VPUB-002 | video.publish | 兼容旧字段 `accountId` | 构造仅含 `accountId` 的 JSON | 执行发布 | 自动映射为 `businessId` |
 | TC-VPUB-003 | video.publish | 缺少输入文件 | 有效 Key | 不传 `--file/--stdin` | 提示缺少 JSON 输入 |
 | TC-VPUB-004 | video.publish | 视频不存在 | 无效 videoId | 执行发布 | 返回接口错误 |
@@ -347,6 +348,7 @@
 | TC-PROD-003 | publish.products | 同时不传 `creator-user-open-id` 与 `account-id` | 有效 Key | 执行命令 | 提示用法 |
 | TC-PROD-004 | publish.products | `account-id` 解析失败 | 无效 accountId | 执行命令 | 返回退出码 5 |
 | TC-PROD-005 | publish.products | 传 `--file` 自定义 body | 有效 Key | 执行 `--file examples/publish-products.json` | 原样发送 body |
+| TC-PROD-005A | publish.products | 示例文件使用显式占位符 | 使用仓库示例文件 | 检查 `examples/publish-products.json` | `creatorUserOpenId` 为 `__REPLACE_WITH_...__`，提示先填真实值 |
 | TC-PROD-006 | publish.products | 传 `--stdin` 自定义 body | 有效 Key | stdin 传 JSON | 原样发送 body |
 | TC-PROD-007 | publish.products | 空结果集 | 无商品数据 | 执行命令 | 输出 `0 products found` |
 
@@ -370,6 +372,7 @@
 | 编号 | 模块 | 场景 | 前置条件 | 操作步骤 | 预期结果 |
 | --- | --- | --- | --- | --- | --- |
 | TC-STR-101 | publish.strategy | 使用原始 body 创建策略 | 有效模板、账号 | 执行 `publish strategy create --file examples/publish-strategy-template.json` | 返回 `strategy_id` |
+| TC-STR-101A | publish.strategy | 示例模板占位值需先替换 | 使用仓库示例文件 | 检查 `examples/publish-strategy-template.json` | `businessId/template` 使用 `__REPLACE_WITH_...__` 占位符，`date` 保持合法日期以通过本地校验 |
 | TC-STR-102 | publish.strategy | 兼容旧版 `strategyCreateDTO` 包装 | 准备包装 JSON | 执行创建 | 自动解包 |
 | TC-STR-103 | publish.strategy | 缺少输入文件 | 有效 Key | 不传 `--file/--stdin` | 提示缺少 JSON 输入 |
 | TC-STR-104 | publish.strategy | 启用策略成功 | 有效 `strategy_id` | 执行 `publish strategy enable --id xxx` | 调用 toggle 接口并返回启用状态 |

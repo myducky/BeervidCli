@@ -1,5 +1,5 @@
 {
-  "creatorUserOpenId": "creator_open_id_xxx",
+  "creatorUserOpenId": "__REPLACE_WITH_CREATOR_USER_OPEN_ID__",
   "current": 1,
   "size": 20
 }

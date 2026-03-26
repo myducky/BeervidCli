@@ -1,9 +1,9 @@
 {
   "name": "Daily Product Publish",
-  "businessId": "account_xxx",
+  "businessId": "__REPLACE_WITH_BUSINESS_ID__",
   "strategyType": "TEMPLATE",
   "contentTemplates": [
-    "template_xxx"
+    "__REPLACE_WITH_TEMPLATE_ID__"
   ],
   "pushMode": 0,
   "pushTimeType": 0,
@@ -12,7 +12,7 @@
     "execType": "LONG_TERM",
     "batchExecutedAt": [
       {
-        "date": "2026-03-26",
+        "date": "2099-12-31",
         "times": [
           "10:00"
         ]

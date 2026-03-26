@@ -84,6 +84,26 @@ npm test
 npm run test:helpers
 ```
 
+## Example File Guidance
+
+These example files are ready to use as-is for request shape testing:
+
+- `examples/video-create.json`
+- `examples/video-create-lg-c5-16s.json`
+- `examples/video-create-lg-c5-16s-single-fragment.json`
+- `examples/video-create-lg-c5-16s-user-request.json`
+- `examples/video-create-lg-c5-verbatim-user-prompt.json`
+- `examples/video-list.json`
+- `examples/publish-records.json`
+
+These files are editable templates and require you to replace placeholder values before sending them to the API:
+
+- `examples/video-publish.json`
+- `examples/publish-products.json`
+- `examples/publish-strategy-template.json`
+
+For `examples/publish-strategy-template.json`, the bundled `date` is intentionally set to a valid far-future value so the CLI's local validation still passes before you replace the account and template placeholders.
+
 ## Cookbook
 
 ### Check auth and account access
@@ -130,6 +150,7 @@ node ./bin/beervid.js templates get --id template_xxx
 ### Create, enable, and inspect a publish strategy
 
 ```bash
+# Replace __REPLACE_WITH_...__ placeholders in the template first.
 node ./bin/beervid.js publish strategy create --file ./examples/publish-strategy-template.json
 node ./bin/beervid.js publish strategy enable --id strategy_xxx
 node ./bin/beervid.js publish strategy get --id strategy_xxx
@@ -139,6 +160,7 @@ node ./bin/beervid.js publish records
 If you want the CLI to create and enable in one pass:
 
 ```bash
+# Replace __REPLACE_WITH_...__ placeholders in the template first.
 node ./bin/beervid.js publish run --file ./examples/publish-strategy-template.json
 ```
 
