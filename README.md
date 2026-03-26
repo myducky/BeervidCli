@@ -45,6 +45,7 @@ Install from npm:
 ```bash
 npm install -g beervid-cli
 beervid --help
+beervid-cli --help
 ```
 
 Or run it without installing globally:
@@ -54,6 +55,11 @@ npx beervid-cli --help
 npx beervid-cli auth set-key YOUR_API_KEY
 npx beervid-cli auth test
 ```
+
+Published binary names:
+
+- `beervid`
+- `beervid-cli`
 
 Install from the local repo while iterating:
 

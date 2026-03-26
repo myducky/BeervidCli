@@ -70,6 +70,7 @@
 | --- | --- | --- | --- | --- | --- |
 | TC-BOOT-001 | 安装 | `npm install -g beervid-cli` 安装成功 | Node 环境正常 | 执行全局安装 | 安装成功，无依赖缺失报错 |
 | TC-BOOT-002 | 安装 | `npm link` 本地链接成功 | 仓库代码完整 | 执行 `npm link` | 可生成 `beervid` 可执行命令 |
+| TC-BOOT-002A | 安装 | 发布包暴露双 bin 名称 | 已全局安装或通过 npx 调用 | 执行 `beervid --help`、`beervid-cli --help`、`npx beervid-cli --help` | 三种调用方式均可启动 CLI |
 | TC-BOOT-003 | 启动 | `beervid --help` 显示总帮助 | 已安装 CLI | 执行命令 | 输出主命令列表与全局参数 |
 | TC-BOOT-004 | 启动 | `beervid` 无参数 | 已安装 CLI | 执行命令 | 输出总帮助，不报错 |
 | TC-BOOT-005 | 启动 | 未知一级命令 | 已安装 CLI | 执行 `beervid unknown` | 提示 `Unknown command`，退出码为 1 |
