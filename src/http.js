@@ -58,6 +58,13 @@ async function apiRequest(config, options) {
     throw wrapped;
   }
 
+  const envelopeFailure = getEnvelopeFailure(data);
+  if (envelopeFailure) {
+    const wrapped = new Error(envelopeFailure);
+    wrapped.exitCode = 4;
+    throw wrapped;
+  }
+
   return {
     status: response.status,
     data,
@@ -73,7 +80,21 @@ function maskApiKey(apiKey) {
   return `${apiKey.slice(0, 8)}****${apiKey.slice(-4)}`;
 }
 
+function getEnvelopeFailure(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return null;
+
+  const hasExplicitError = data.error === true || data.success === false;
+  const hasNonZeroCode = Number.isFinite(Number(data.code)) && Number(data.code) !== 0;
+
+  if (!hasExplicitError && !hasNonZeroCode) return null;
+
+  const message = data.message || data.msg || "Request failed";
+  const codeSuffix = Number.isFinite(Number(data.code)) ? `\ncode: ${data.code}` : "";
+  return `${message}${codeSuffix}`;
+}
+
 module.exports = {
   apiRequest,
+  getEnvelopeFailure,
   maskApiKey,
 };

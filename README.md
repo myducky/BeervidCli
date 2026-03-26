@@ -2,6 +2,15 @@
 
 First-pass zero-dependency CLI for the Beervid Open API.
 
+## Positioning
+
+This CLI targets the Beervid product-side API surface used for video generation, templates, publish strategies, and library workflows.
+
+It is not the same thing as the Beervid third-party application Open API:
+
+- Use this CLI when you want broad internal/product capabilities such as `labels`, `templates`, `video create`, `video tasks`, `video list`, `publish strategy`, and `raw`.
+- Use a separate third-party/Open API tool when your primary goal is TT/TTS OAuth onboarding or app-facing publish flows.
+
 ## Quick Start
 
 ```bash
@@ -51,6 +60,87 @@ Install from the local repo while iterating:
 ```bash
 npm link
 beervid --help
+```
+
+## Development
+
+Current code layout:
+
+- `src/commands/` contains command-family handlers
+- `src/workflows/` contains multi-step command orchestration
+- `src/core.js` contains pure normalization and status helpers
+- `src/help.js` contains shared CLI help text
+
+Local helper tests:
+
+```bash
+npm test
+npm run test:helpers
+```
+
+## Cookbook
+
+### Check auth and account access
+
+```bash
+node ./bin/beervid.js auth set-key YOUR_API_KEY
+node ./bin/beervid.js auth test
+node ./bin/beervid.js auth profile
+node ./bin/beervid.js accounts list
+node ./bin/beervid.js accounts shoppable
+```
+
+### Generate a video from local JSON and watch it finish
+
+```bash
+node ./bin/beervid.js video create --file ./examples/video-create.json
+node ./bin/beervid.js video tasks watch --task-id task_xxx
+node ./bin/beervid.js video list --current 1 --size 5
+```
+
+If you want the CLI to do the create-and-watch flow in one command:
+
+```bash
+node ./bin/beervid.js video run --file ./examples/video-create.json
+```
+
+### Upload local or remote assets before create
+
+```bash
+node ./bin/beervid.js video upload --path ./assets/cover.jpg --type image
+node ./bin/beervid.js video upload --path ./assets/music.mp3 --type audio
+```
+
+For `video create` and `video run`, local paths and `http/https` asset URLs inside the payload are auto-uploaded before submit.
+
+### Inspect labels and templates before building a payload
+
+```bash
+node ./bin/beervid.js labels list
+node ./bin/beervid.js templates list
+node ./bin/beervid.js templates get --id template_xxx
+```
+
+### Create, enable, and inspect a publish strategy
+
+```bash
+node ./bin/beervid.js publish strategy create --file ./examples/publish-strategy-template.json
+node ./bin/beervid.js publish strategy enable --id strategy_xxx
+node ./bin/beervid.js publish strategy get --id strategy_xxx
+node ./bin/beervid.js publish records
+```
+
+If you want the CLI to create and enable in one pass:
+
+```bash
+node ./bin/beervid.js publish run --file ./examples/publish-strategy-template.json
+```
+
+### Debug an endpoint that is not wrapped yet
+
+```bash
+node ./bin/beervid.js raw get /templates/options
+node ./bin/beervid.js raw post /send-records/list --file ./examples/publish-records.json
 ```
 
 ## Video Create Rules

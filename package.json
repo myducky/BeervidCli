@@ -24,6 +24,7 @@
   "type": "commonjs",
   "files": [
     "bin",
+    "examples",
     "src",
     "README.md"
   ],
@@ -33,6 +34,8 @@
   "preferGlobal": true,
   "scripts": {
     "start": "node ./bin/beervid.js",
+    "test": "node --test ./test/*.test.js",
+    "test:helpers": "node --test ./test/helpers.test.js",
     "test:smoke": "node ./bin/beervid.js --help",
     "pack:check": "npm pack --dry-run"
   }

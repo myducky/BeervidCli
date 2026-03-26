@@ -4,7 +4,7 @@
 
 - 本测试用例基于当前仓库实现、README 中的功能说明、示例请求文件，以及 CLI 已落地的接口路径与参数规则整理。
 - 范围覆盖：安装与启动、配置与鉴权、账户/标签/模板查询、视频创建与上传、任务查询与轮询、视频库与发布、发布策略、原始接口调用、补全脚本。
-- 用例类型覆盖：正常流程、参数校验、兼容性、异常处理、边界值、幂等性。
+- 用例类型覆盖：正常流程、参数校验、兼容性、异常处理、边界值、幂等性、纯逻辑 helper 校验。
 - 若后续“之前提供的接口文档”存在比当前代码更新的字段约束，应以最新接口文档补充或修订本清单。
 
 ## 2. 测试环境与通用前置条件
@@ -14,7 +14,10 @@
 - Node.js 18 及以上。
 - 可访问 Beervid Open API 服务。
 - 具备有效 API Key、测试用 TikTok 账号、模板、策略、视频、商品数据。
-- 当前本地环境需要注意：PATH 中的 `node` 是 Docker 包装脚本，实际联调建议使用真实 Node 可执行文件，例如 `/opt/homebrew/bin/node`。
+- 当前本地环境需要注意：PATH 中的 `node` 可能是 Docker 包装脚本。若发现命令落到其他项目目录，应改用真实 Node 可执行文件，例如 `/opt/homebrew/bin/node`。
+- 当前仓库已新增纯逻辑 helper 测试，建议优先执行：
+  - `/opt/homebrew/bin/node --test test/helpers.test.js`
+  - `/opt/homebrew/bin/node bin/beervid.js --help`
 - 准备本地测试素材：
   - 合法 JPG/JPEG/PNG 图片各 1 份
   - 合法 MP4/MOV 视频各 1 份
@@ -56,6 +59,8 @@
 - `publish`: `products` / `strategy list|get|create|enable|disable|delete` / `records` / `run`
 - `raw`: `get|post|put|patch|delete`
 - `completion`: `zsh|bash|fish`
+- helper tests: `parseArgs` / payload normalize / status normalize / deep-field lookup
+- transport tests: HTTP 200 + 业务失败信封应返回失败，而不是伪成功
 
 ## 4. 测试用例
 
@@ -73,6 +78,24 @@
 | TC-BOOT-008 | 启动 | `--json` 全局输出 | 已安装 CLI | 对任意成功命令追加 `--json` | 输出合法 JSON |
 | TC-BOOT-009 | 启动 | `--config-path` 使用自定义配置文件 | 指定路径可写 | 使用自定义路径执行 `auth set-key` 与 `auth status` | 配置写入并从自定义路径读取 |
 | TC-BOOT-010 | 兼容性 | bin 入口脚本可直接运行 | 仓库存在 `bin/beervid.js` | 执行 `node /绝对路径/bin/beervid.js --help` | CLI 正常启动 |
+| TC-BOOT-011 | 兼容性 | 真实 Node 可直接运行当前仓库 | 本地 `node` 可能为包装脚本 | 执行 `/opt/homebrew/bin/node bin/beervid.js --help` | CLI 正常启动且显示当前仓库帮助 |
+| TC-BOOT-012 | 兼容性 | 未知命令退出码正确 | 已安装 CLI | 执行 `/opt/homebrew/bin/node bin/beervid.js unknown` | 输出 `Unknown command`，退出码为 1 |
+| TC-BOOT-013 | completion | `completion zsh` 输出补全脚本 | 已安装 CLI | 执行 `/opt/homebrew/bin/node bin/beervid.js completion zsh` | 输出 zsh 补全内容 |
+
+### 4.1.1 纯逻辑 helper 测试
+
+| 编号 | 模块 | 场景 | 前置条件 | 操作步骤 | 预期结果 |
+| --- | --- | --- | --- | --- | --- |
+| TC-HELPER-001 | helper | `parseArgs` 解析 positionals 与 flags | Node 环境正常 | 执行 `/opt/homebrew/bin/node --test test/helpers.test.js` | `parseArgs` 用例通过 |
+| TC-HELPER-002 | helper | `normalizeVideoCreatePayload` 解包 `formData/request` | 同上 | 执行 helper tests | 对应测试通过 |
+| TC-HELPER-003 | helper | `normalizeVideoPublishPayload` 兼容 `accountId -> businessId` | 同上 | 执行 helper tests | 对应测试通过 |
+| TC-HELPER-004 | helper | `normalizeStrategyPayload` 解包 `strategyCreateDTO` | 同上 | 执行 helper tests | 对应测试通过 |
+| TC-HELPER-005 | helper | `normalizeTaskStatus` 兼容数值状态 | 同上 | 执行 helper tests | 对应测试通过 |
+| TC-HELPER-006 | helper | `findEnabledState` 兼容布尔/数字/字符串 | 同上 | 执行 helper tests | 对应测试通过 |
+| TC-HELPER-007 | helper | `findTaskId` 深层提取 task id | 同上 | 执行 helper tests | 对应测试通过 |
+| TC-HELPER-008 | helper | `findDeepValue` 递归读取嵌套字段 | 同上 | 执行 helper tests | 对应测试通过 |
+| TC-HELPER-009 | helper | `getEnvelopeFailure` 忽略成功信封 | 同上 | 执行 HTTP/helper tests | 对应测试通过 |
+| TC-HELPER-010 | helper | `getEnvelopeFailure` 识别业务失败信封 | 同上 | 执行 HTTP/helper tests | 对应测试通过 |
 
 ### 4.2 配置与鉴权 `auth`
 
@@ -225,6 +248,7 @@
 | TC-VC-309 | video.create | `useCoverFrame` 不是布尔值 | 有效 Key | 传字符串/数值 | 本地拦截 |
 | TC-VC-310 | video.create | `spliceMethod` 非法值 | 有效 Key | 传其他枚举 | 本地拦截 |
 | TC-VC-311 | video.create | 接口返回业务错误 | 模拟 4xx/5xx | 提交创建 | 输出错误，退出码 4 或 3 |
+| TC-VC-312 | video.create | HTTP 200 但业务失败时不应输出伪成功 | 余额不足或模拟 `error=true/success=false/code!=0` 响应 | 执行 `video create` | CLI 输出业务错误并以退出码 4 失败 |
 
 #### 4.7.5 自动上传能力
 
