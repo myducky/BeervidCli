@@ -1,6 +1,6 @@
 {
   "name": "beervid-cli",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Zero-dependency CLI for the Beervid Open API",
   "license": "MIT",
   "repository": {
