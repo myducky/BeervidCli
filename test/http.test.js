@@ -8,6 +8,10 @@ test("getEnvelopeFailure ignores successful envelopes", () => {
     getEnvelopeFailure({ code: 0, message: "success", error: false, success: true }),
     null,
   );
+  assert.equal(
+    getEnvelopeFailure({ code: 200, message: "success", error: false, success: true }),
+    null,
+  );
 });
 
 test("getEnvelopeFailure detects business failure envelopes", () => {

@@ -56,7 +56,7 @@ const HELP_TOPICS = {
     "  beervid video tasks watch --task-id <task_id> [--initial-wait <seconds>]",
     "  beervid video list [--current <n>] [--size <n>]",
     "  beervid video publish --file <payload.json>",
-    "  beervid video data get --id <publish_task_id>",
+    "  beervid video data get --id <video_id>",
     "  beervid video run --file <payload.json> [--initial-wait <seconds>] [--confirm-veo-two-8s]",
     "",
     "Video Create Notes:",

@@ -84,7 +84,9 @@ function getEnvelopeFailure(data) {
   if (!data || typeof data !== "object" || Array.isArray(data)) return null;
 
   const hasExplicitError = data.error === true || data.success === false;
-  const hasNonZeroCode = Number.isFinite(Number(data.code)) && Number(data.code) !== 0;
+  const numericCode = Number(data.code);
+  const hasKnownSuccessCode = Number.isFinite(numericCode) && (numericCode === 0 || numericCode === 200);
+  const hasNonZeroCode = Number.isFinite(numericCode) && !hasKnownSuccessCode;
 
   if (!hasExplicitError && !hasNonZeroCode) return null;
 

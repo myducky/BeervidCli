@@ -194,6 +194,12 @@
 | TC-VC-009 | video.create | `fragmentList[].videoContent` 原文直传 | 准备包含中文、Markdown、占位符、首尾空白的请求 JSON | 执行创建前本地 normalize/helper tests，或对请求发送体做断言 | CLI 不改写、不翻译、不 trim、不总结用户视频描述 |
 | TC-VC-010 | video.run | 首次查询前延迟等待 | 有效 Key 与有效请求 | 执行 `video run --file payload.json --initial-wait 300` | 提交成功后先等待 300 秒，再开始首次状态查询，避免立即高频轮询 |
 | TC-VC-011 | video.create | `techType` 与系统风格映射一致 | 准备 `techType=veo` 与 `techType=sora` 的请求 JSON | 执行创建前检查帮助文档、示例和发送体 | 项目说明明确 `veo=电影风格`、`sora 系列=写实风格`，提交和对外说明不得混淆 |
+| TC-VC-012 | video.create | `videoScale=16:9` 时仅允许 `veo` | 有效 Key | 提交 `videoScale=16:9` 且 `techType=sora*` 的 payload | 按最新接口文档应本地拦截或由服务端返回明确错误 |
+| TC-VC-013 | video.create | `dialogueLanguage` 必填且需匹配 `techType` | 有效 Key | 分别提交缺失语言、以及 `veo/sora` 不支持的语言组合 | 按文档返回明确校验错误 |
+| TC-VC-014 | video.create | `showTitle/showSubtitle/noBgmMusic/hdEnhancement` 必填布尔字段 | 有效 Key | 提交缺失或 `null` 的布尔字段 | 按文档返回明确校验错误 |
+| TC-VC-015 | video.create | `showTitle/showSubtitle=true` 仅支持英语语种 | 有效 Key | 提交 `dialogueLanguage=Mandarin` 且标题/字幕开关为 `true` | 按文档返回明确校验错误 |
+| TC-VC-016 | video.create | `hdEnhancement=true` 仅支持 `sora` 系列 | 有效 Key | 提交 `techType=veo` 且 `hdEnhancement=true` | 按文档返回明确校验错误 |
+| TC-VC-017 | video.create | `labelIds` 需为当前用户可用的合法 UUID | 有效 Key | 提交非法格式或不属于当前用户的 `labelIds` | 按文档返回标签校验错误 |
 
 #### 4.7.2 VEO 参数校验
 
@@ -316,7 +322,7 @@
 
 | 编号 | 模块 | 场景 | 前置条件 | 操作步骤 | 预期结果 |
 | --- | --- | --- | --- | --- | --- |
-| TC-VPUB-001 | video.publish | 用 `businessId` 发布成功 | 有效 videoId、businessId | 执行 `video publish --file examples/video-publish.json` | 返回 `publish_task_id` |
+| TC-VPUB-001 | video.publish | 用 `businessId` 发布成功 | 有效 videoId、businessId | 执行 `video publish --file examples/video-publish.json` | 发布提交成功；若接口未返回 `publishTaskId`，CLI 应允许显示为 `unknown` |
 | TC-VPUB-001A | video.publish | 示例文件占位值需先替换 | 使用仓库示例文件 | 检查 `examples/video-publish.json` | `videoId/businessId` 为 `__REPLACE_WITH_...__` 占位符，避免误以为可直接发布 |
 | TC-VPUB-002 | video.publish | 兼容旧字段 `accountId` | 构造仅含 `accountId` 的 JSON | 执行发布 | 自动映射为 `businessId` |
 | TC-VPUB-003 | video.publish | 缺少输入文件 | 有效 Key | 不传 `--file/--stdin` | 提示缺少 JSON 输入 |
@@ -328,7 +334,7 @@
 
 | 编号 | 模块 | 场景 | 前置条件 | 操作步骤 | 预期结果 |
 | --- | --- | --- | --- | --- | --- |
-| TC-VDATA-001 | video.data | 查询发布数据成功 | 有效 `publish_task_id` | 执行 `video data get --id xxx` | 返回播放/点赞/评论/分享等数据 |
+| TC-VDATA-001 | video.data | 查询发布数据成功 | 有效 TikTok `videoId` | 执行 `video data get --id xxx` | 返回播放/点赞/评论/分享等数据 |
 | TC-VDATA-002 | video.data | 未传 `--id` | 有效 Key | 执行命令 | 提示用法 |
 | TC-VDATA-003 | video.data | 兼容 `data.data` 嵌套 | 接口数据嵌套 | 执行查询 | 正确读取字段 |
 | TC-VDATA-004 | video.data | 部分统计字段缺失 | 接口缺某些字段 | 执行查询 | 仅输出存在字段，不报错 |
@@ -381,6 +387,8 @@
 | TC-STR-101A | publish.strategy | 示例模板占位值需先替换 | 使用仓库示例文件 | 检查 `examples/publish-strategy-template.json` | `businessId/template` 使用 `__REPLACE_WITH_...__` 占位符，`date` 保持合法日期以通过本地校验 |
 | TC-STR-102 | publish.strategy | 兼容旧版 `strategyCreateDTO` 包装 | 准备包装 JSON | 执行创建 | 自动解包 |
 | TC-STR-103 | publish.strategy | 缺少输入文件 | 有效 Key | 不传 `--file/--stdin` | 提示缺少 JSON 输入 |
+| TC-STR-103A | publish.strategy | `productAnchorStatus=true` 时 `pushConfig.productLinkInfo` 必填 | 有效 Key | 构造开启挂车但缺少 `productLinkInfo` 的请求 | 按文档返回明确校验错误 |
+| TC-STR-103B | publish.strategy | 策略挂车信息需包含 `title`，`productAnchorTitle` 为可选 | 有效 Key | 构造缺少 `title` 或超长 `productAnchorTitle` 的请求 | 按文档返回明确校验错误 |
 | TC-STR-104 | publish.strategy | 启用策略成功 | 有效 `strategy_id` | 执行 `publish strategy enable --id xxx` | 调用 toggle 接口并返回启用状态 |
 | TC-STR-105 | publish.strategy | 禁用策略成功 | 有效 `strategy_id` | 执行 `publish strategy disable --id xxx` | 调用 toggle 接口并返回禁用状态 |
 | TC-STR-106 | publish.strategy | 启用已启用策略幂等 | 策略已启用 | 重复执行 enable | 仍安全返回 |

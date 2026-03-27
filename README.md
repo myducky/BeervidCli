@@ -28,7 +28,7 @@ node ./bin/beervid.js video tasks get --task-id task_xxx
 node ./bin/beervid.js video tasks watch --task-id task_xxx
 node ./bin/beervid.js video list
 node ./bin/beervid.js video publish --file ./examples/video-publish.json
-node ./bin/beervid.js video data get --id publish_task_xxx
+node ./bin/beervid.js video data get --id video_xxx
 node ./bin/beervid.js publish strategy list
 node ./bin/beervid.js publish products --creator-user-open-id creator_open_id_xxx
 node ./bin/beervid.js publish strategy create --file ./examples/publish-strategy-template.json

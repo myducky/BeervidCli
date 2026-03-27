@@ -192,7 +192,7 @@ async function handleVideoData(subcommand, flags, config, deps) {
   }
 
   const id = flags.id;
-  if (!id) fail("Usage: beervid video data get --id <publish_task_id>", 1);
+  if (!id) fail("Usage: beervid video data get --id <video_id>", 1);
   const response = await apiRequest(config, {
     method: "GET",
     path: `/video/publish-task/${id}`,
