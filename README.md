@@ -93,6 +93,7 @@ These example files are ready to use as-is for request shape testing:
 - `examples/video-create-lg-c5-16s-single-fragment.json`
 - `examples/video-create-lg-c5-16s-user-request.json`
 - `examples/video-create-lg-c5-verbatim-user-prompt.json`
+- `examples/video-create-xiaomi-sora-15s-verbatim-user-prompt.json`
 - `examples/video-list.json`
 - `examples/publish-records.json`
 
