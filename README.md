@@ -130,6 +130,13 @@ If you want the CLI to do the create-and-watch flow in one command:
 node ./bin/beervid.js video run --file ./examples/video-create.json
 ```
 
+If you intentionally submit a single-fragment `veo` 16-second request, confirm that the user really wants two internal 8-second chapters:
+
+```bash
+node ./bin/beervid.js video create --file ./examples/video-create-lg-c5-16s-single-fragment.json --confirm-veo-two-8s
+node ./bin/beervid.js video run --file ./examples/video-create-lg-c5-16s-single-fragment.json --confirm-veo-two-8s
+```
+
 For real generation workloads, the platform commonly needs about 5-10 minutes. Prefer waiting about 5 minutes before the first status query instead of polling immediately:
 
 ```bash
@@ -180,8 +187,11 @@ node ./bin/beervid.js raw post /send-records/list --file ./examples/publish-reco
 
 ## Video Create Rules
 
+- In this system, `techType: "veo"` corresponds to the cinematic style path, and `techType: "sora"`, `sora_azure`, `sora_h_pro`, and `sora_aio` correspond to the realistic style path.
+- If the user explicitly selected a style, the submitted payload and user-facing explanations should stay aligned with that mapping. Do not describe a `veo` request as `写实`, and do not describe a `sora` request as `电影`.
 - `techType: "veo"` means the cinematic model. In each `fragmentList` item, `segmentCount` maps to duration: `1=8s`, `2=16s`, `3=24s`, `4=32s`.
-- `techType: "sora"`, `sora_azure`, `sora_h_pro`, and `sora_aio` use the SORA family rules. Each fragment must use `segmentCount: 1`.
+- A single-fragment `veo` request with `segmentCount: 2` does not mean one native 16-second take. It means two internal 8-second chapters in one fragment, so the CLI now requires explicit confirmation via `--confirm-veo-two-8s`.
+- `techType: "sora"`, `sora_azure`, `sora_h_pro`, and `sora_aio` use the SORA family rules and the realistic style path. Each request must use exactly one fragment, and that fragment corresponds to one 15-second generation.
 - `fragmentList.length` matches the number of UI chapters or scenes. Two 8-second VEO scenes should be modeled as two fragment objects with `segmentCount: 1` each.
 - `videoScale` controls aspect ratio and accepts `9:16` or `16:9`.
 - `portraitImages` is VEO-only, allows at most 1 image, and requires `useCoverFrame: true` when `videoScale` is `9:16`.

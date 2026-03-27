@@ -132,7 +132,7 @@ function buildListRequest(flags) {
   return request;
 }
 
-function validateVideoCreatePayload(body) {
+function validateVideoCreatePayload(body, flags = {}) {
   const payload = normalizeVideoCreatePayload(body);
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
     fail("Video create payload must be a JSON object.", 1);
@@ -177,6 +177,13 @@ function validateVideoCreatePayload(body) {
     }
 
     if (techType === "veo") {
+      if (fragmentList.length === 1 && fragment.segmentCount === 2 && flags["confirm-veo-two-8s"] !== true) {
+        fail(
+          "veo single-fragment 16s means two internal 8s chapters, not one native 16s take. "
+          + "Confirm the user wants two 8s chapters and retry with --confirm-veo-two-8s.",
+          1,
+        );
+      }
       if (productReferenceImages.length > 3) {
         fail(`${prefix}.productReferenceImages allows at most 3 images for veo.`, 1);
       }
@@ -210,6 +217,9 @@ function validateVideoCreatePayload(body) {
       if (fragment.segmentCount !== 1) {
         fail(`${prefix}.segmentCount must be 1 for ${techType}.`, 1);
       }
+      if (fragmentList.length !== 1) {
+        fail(`${techType} currently supports a single fragment only; one fragment corresponds to one 15s generation.`, 1);
+      }
       if (fragment.spliceMethod === "LONG_TAKE") {
         fail(`${prefix}.spliceMethod LONG_TAKE is not supported for ${techType}.`, 1);
       }
@@ -220,7 +230,7 @@ function validateVideoCreatePayload(body) {
 }
 
 async function prepareVideoCreatePayload(config, body, flags = {}) {
-  const payload = validateVideoCreatePayload(body);
+  const payload = validateVideoCreatePayload(body, flags);
   const prepared = cloneJson(payload);
 
   await replaceUploadFieldWithUrls(config, prepared, "bgmList", "audio", flags);
@@ -588,4 +598,7 @@ function copyOptionalCsvFlag(flags, target, from, to = from, mapValue = (value) 
   target[to] = String(flags[from]).split(",").map((value) => mapValue(value.trim())).filter((value) => value !== "");
 }
 
-module.exports = { main };
+module.exports = {
+  main,
+  validateVideoCreatePayload,
+};

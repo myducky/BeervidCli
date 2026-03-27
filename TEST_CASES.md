@@ -193,6 +193,7 @@
 | TC-VC-008 | video.create | JSON 模式输出 | 有效 Key | 追加 `--json` | 输出 JSON 且包含完整接口数据 |
 | TC-VC-009 | video.create | `fragmentList[].videoContent` 原文直传 | 准备包含中文、Markdown、占位符、首尾空白的请求 JSON | 执行创建前本地 normalize/helper tests，或对请求发送体做断言 | CLI 不改写、不翻译、不 trim、不总结用户视频描述 |
 | TC-VC-010 | video.run | 首次查询前延迟等待 | 有效 Key 与有效请求 | 执行 `video run --file payload.json --initial-wait 300` | 提交成功后先等待 300 秒，再开始首次状态查询，避免立即高频轮询 |
+| TC-VC-011 | video.create | `techType` 与系统风格映射一致 | 准备 `techType=veo` 与 `techType=sora` 的请求 JSON | 执行创建前检查帮助文档、示例和发送体 | 项目说明明确 `veo=电影风格`、`sora 系列=写实风格`，提交和对外说明不得混淆 |
 
 #### 4.7.2 VEO 参数校验
 
@@ -203,6 +204,8 @@
 | TC-VC-103 | video.create | `segmentCount=0` 非法 | 有效 Key | 提交 payload | 提示 1-4 才合法 |
 | TC-VC-104 | video.create | `segmentCount=5` 非法 | 有效 Key | 提交 payload | 提示 1-4 才合法 |
 | TC-VC-105 | video.create | `segmentCount` 非整数 | 有效 Key | 提交浮点或字符串 | 提示必须为整数 |
+| TC-VC-105A | video.create | `veo` 单片段 `segmentCount=2` 需显式确认 | 有效 Key | 执行 `video create --file payload.json`，其中 payload 为单片段 `veo` 16s | 本地拦截，并提示需用 `--confirm-veo-two-8s` 确认“16 秒其实是两个 8 秒片段” |
+| TC-VC-105B | video.create | 已确认的 `veo` 单片段 `segmentCount=2` 可提交 | 有效 Key | 执行 `video create --file payload.json --confirm-veo-two-8s` | 校验通过 |
 | TC-VC-106 | video.create | `spliceMethod=SPLICE` 合法 | 有效 Key | 提交 payload | 校验通过 |
 | TC-VC-107 | video.create | `segmentCount=1` 且 `LONG_TAKE` 非法 | 有效 Key | 提交 payload | 本地拦截 |
 | TC-VC-108 | video.create | `productReferenceImages` 0 张 | 有效 Key | 提交 payload | 合法 |
@@ -225,6 +228,7 @@
 | TC-VC-204 | video.create | `techType=sora_aio` 合法 | 有效 Key | 提交合法 payload | 校验通过 |
 | TC-VC-205 | video.create | SORA `segmentCount=1` 合法 | 有效 Key | 提交 payload | 校验通过 |
 | TC-VC-206 | video.create | SORA `segmentCount=2` 非法 | 有效 Key | 提交 payload | 本地拦截 |
+| TC-VC-206A | video.create | SORA 多片段非法 | 有效 Key | 提交 `fragmentList.length > 1` 的 payload | 本地拦截，并提示 SORA 系列当前只支持单片段 15 秒 |
 | TC-VC-207 | video.create | SORA `useCoverFrame=false` 合法 | 有效 Key | 提交 payload | 校验通过 |
 | TC-VC-208 | video.create | SORA `useCoverFrame=true` 非法 | 有效 Key | 提交 payload | 本地拦截 |
 | TC-VC-209 | video.create | SORA `portraitImages` 非空非法 | 有效 Key | 提交 payload | 本地拦截 |
