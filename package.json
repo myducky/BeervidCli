@@ -1,6 +1,6 @@
 {
   "name": "beervid-cli",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Zero-dependency CLI for the Beervid Open API",
   "license": "MIT",
   "repository": {
@@ -35,8 +35,10 @@
   "preferGlobal": true,
   "scripts": {
     "start": "node ./bin/beervid.js",
-    "test": "node --test ./test/*.test.js",
-    "test:helpers": "node --test ./test/helpers.test.js",
+    "test": "node --test \"./test/**/*.test.js\"",
+    "test:unit": "node --test \"./test/unit/**/*.test.js\"",
+    "test:commands": "node --test \"./test/commands/**/*.test.js\"",
+    "test:cli": "node --test \"./test/cli/**/*.test.js\"",
     "test:smoke": "node ./bin/beervid.js --help",
     "pack:check": "npm pack --dry-run"
   }

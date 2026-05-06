@@ -81,8 +81,17 @@ Local helper tests:
 
 ```bash
 npm test
-npm run test:helpers
+npm run test:unit
+npm run test:commands
+npm run test:cli
 ```
+
+Current automated test layout:
+
+- `test/unit/`: pure helpers and transport envelope logic
+- `test/cli/`: CLI-only validation rules
+- `test/commands/`: command handler orchestration and request-shape regressions
+- `test/support/`: lightweight test doubles shared by command tests
 
 ## Example File Guidance
 

@@ -62,6 +62,38 @@
 - helper tests: `parseArgs` / payload normalize / status normalize / deep-field lookup
 - transport tests: HTTP 200 + 业务失败信封应返回失败，而不是伪成功
 
+## 3.1 当前自动化测试映射
+
+- `test/unit/utils.test.js`
+  - `parseArgs` 解析 positionals 与 flags
+- `test/unit/core.test.js`
+  - `normalizeVideoCreatePayload`
+  - `normalizeVideoPublishPayload`
+  - `normalizeStrategyPayload`
+  - `normalizeTaskStatus`
+  - `findEnabledState`
+  - `findTaskId`
+  - `findDeepValue`
+- `test/unit/http.test.js`
+  - `getEnvelopeFailure` 成功/失败信封识别
+- `test/cli/validate-video-create.test.js`
+  - `validateVideoCreatePayload` 的 VEO/SORA 关键本地校验
+- `test/commands/publish.test.js`
+  - `publish products` 请求体回归
+  - `publish strategy create/enable` 编排回归
+- `test/commands/auth.test.js`
+  - `auth status/test` 编排与输出回归
+- `test/commands/accounts.test.js`
+  - `accounts list/shoppable` 请求参数回归
+- `test/commands/templates.test.js`
+  - `labels list`
+  - `templates get` 参数与输出回归
+- `test/commands/misc.test.js`
+  - `raw get`
+  - `completion bash`
+
+> 说明：该映射只覆盖当前已自动化部分，其余测试项仍保留为手工/联调用例清单，后续可按模块继续迁移到 `test/commands/` 或 `test/integration/`。
+
 ## 4. 测试用例
 
 ### 4.1 安装、启动与基础帮助

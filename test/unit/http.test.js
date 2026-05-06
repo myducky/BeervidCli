@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const { getEnvelopeFailure } = require("../src/http");
+const { getEnvelopeFailure } = require("../../src/http");
 
 test("getEnvelopeFailure ignores successful envelopes", () => {
   assert.equal(
