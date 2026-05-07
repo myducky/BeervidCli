@@ -4,9 +4,9 @@ const path = require("path");
 const { findDeepValue } = require("./core");
 const { fail } = require("./validation");
 
-async function uploadLocalFile({ config, filePath, fileType, apiRequest }) {
-  const buffer = fs.readFileSync(filePath);
+async function uploadLocalFile({ config, filePath, fileType, apiRequest, returnDetails = false }) {
   validateUploadFile(filePath, fileType);
+  const buffer = fs.readFileSync(filePath);
   return uploadFileContents({
     config,
     buffer,
@@ -15,6 +15,7 @@ async function uploadLocalFile({ config, filePath, fileType, apiRequest }) {
     sourceLabel: filePath,
     mimeType: mimeTypeForFileName(path.basename(filePath), fileType),
     apiRequest,
+    returnDetails,
   });
 }
 
@@ -45,7 +46,16 @@ async function uploadRemoteFile({ config, sourceUrl, fileType, apiRequest }) {
   });
 }
 
-async function uploadFileContents({ config, buffer, fileName, fileType, sourceLabel, mimeType, apiRequest }) {
+async function uploadFileContents({
+  config,
+  buffer,
+  fileName,
+  fileType,
+  sourceLabel,
+  mimeType,
+  apiRequest,
+  returnDetails = false,
+}) {
   const formData = new FormData();
   formData.set("file", new Blob([buffer], { type: mimeType }), fileName);
   formData.set("fileType", fileType);
@@ -58,7 +68,27 @@ async function uploadFileContents({ config, buffer, fileName, fileType, sourceLa
   if (!fileUrl) {
     fail(`Upload succeeded but no fileUrl was returned for: ${sourceLabel}`, 5);
   }
+  if (returnDetails) {
+    return {
+      fileUrl,
+      fileName,
+      fileType,
+      size: buffer.length,
+      mimeType,
+      sourceLabel,
+    };
+  }
   return fileUrl;
+}
+
+function formatFileSize(size) {
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${formatSizeNumber(size / 1024)} KB`;
+  return `${formatSizeNumber(size / (1024 * 1024))} MB`;
+}
+
+function formatSizeNumber(value) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
 function resolveExistingLocalPath(value) {
@@ -77,7 +107,17 @@ function resolveExistingLocalPath(value) {
 }
 
 function validateUploadFile(filePath, fileType) {
-  const stats = fs.statSync(filePath);
+  let stats;
+  try {
+    stats = fs.statSync(filePath);
+  } catch (error) {
+    const wrapped = new Error(`Cannot read upload file: ${filePath}`);
+    wrapped.exitCode = 1;
+    throw wrapped;
+  }
+  if (!stats.isFile()) {
+    fail(`Upload path is not a file: ${filePath}`, 1);
+  }
   return validateUploadMeta({
     size: stats.size,
     ext: path.extname(filePath).toLowerCase(),
@@ -182,6 +222,7 @@ function isHttpUrl(value) {
 
 module.exports = {
   isHttpUrl,
+  formatFileSize,
   mimeTypeForFileName,
   resolveExistingLocalPath,
   uploadFileContents,

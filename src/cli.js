@@ -16,8 +16,10 @@ const { handleLabels, handleTemplates } = require("./commands/templates");
 const { handleVideo, handleVideoData, handleVideoTasks } = require("./commands/video");
 const { handlePublish, handlePublishStrategy } = require("./commands/publish");
 const { handleRaw, handleCompletion } = require("./commands/misc");
+const { handleWorkflow } = require("./commands/workflow");
 const { runVideoWorkflow } = require("./workflows/video-run");
 const { runPublishWorkflow } = require("./workflows/publish-run");
+const { runEndToEndPublishWorkflow } = require("./workflows/end-to-end-publish");
 const {
   buildSendRecordsRequest,
   buildStrategyListRequest,
@@ -31,6 +33,7 @@ const {
   watchTask: watchTaskCore,
 } = require("./tasks");
 const {
+  formatFileSize,
   mimeTypeForFileName,
   uploadLocalFile,
   validateUploadFile,
@@ -83,6 +86,8 @@ async function main(argv) {
       return handleVideo(subcommand, rest, parsed.flags, config, commandDeps);
     case "publish":
       return handlePublish(subcommand, rest, parsed.flags, config, commandDeps);
+    case "workflow":
+      return handleWorkflow(subcommand, rest, parsed.flags, config, commandDeps);
     case "raw":
       return handleRaw(subcommand, rest, parsed.flags, config, commandDeps);
     case "completion":
@@ -117,6 +122,7 @@ const commandDeps = {
   isSuccessStatus,
   maskApiKey,
   mimeTypeForFileName,
+  formatFileSize,
   normalizeStrategyPayload,
   normalizeVideoPublishPayload,
   prepareVideoCreatePayload,
@@ -125,6 +131,7 @@ const commandDeps = {
   requireApiKey,
   resolveCreatorUserOpenId,
   runPublishWorkflow,
+  runEndToEndPublishWorkflow,
   runVideoWorkflow,
   saveApiKey,
   toggleStrategy,
@@ -132,6 +139,7 @@ const commandDeps = {
   validateUploadFile,
   watchTask,
   getConfigPath,
+  parsePositiveInteger,
 };
 
 function requireApiKey(config) {

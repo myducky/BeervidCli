@@ -4,6 +4,32 @@ Zero-dependency Node.js CLI for the Beervid Open API.
 
 The CLI covers authentication, TikTok account lookup, labels, templates, video generation, video library publishing, publish strategies, publish records, and raw endpoint calls.
 
+## API Coverage
+
+The CLI wraps the documented Beervid Open API surface as first-class commands. Future endpoints can still be called with `beervid raw`.
+
+| API | CLI |
+| --- | --- |
+| `GET /check` | `beervid auth check`, `beervid auth test` |
+| `GET /profile` | `beervid auth profile`, `beervid auth test` |
+| `GET /tt-accounts` | `beervid accounts list`, `beervid accounts shoppable` |
+| `GET /templates/options` | `beervid templates list` |
+| `GET /templates/{id}` | `beervid templates get --id <template_id>` |
+| `GET /video-create/labels` | `beervid labels list` |
+| `POST /shop-products/list` | `beervid publish products` |
+| `POST /video-create` | `beervid video create`, `beervid video run`, `beervid workflow publish` |
+| `GET /video-create/tasks` | `beervid video tasks list|get|watch`, workflow polling |
+| `POST /video-create/upload` | `beervid video upload`, automatic asset upload in video payloads |
+| `POST /videos/library/list` | `beervid video list`, `beervid video run`, `beervid workflow publish` |
+| `POST /videos/library/publish` | `beervid video publish`, `beervid workflow publish` |
+| `GET /video/publish-task/{id}` | `beervid video data get --id <publish_task_id>`, `beervid workflow publish` |
+| `POST /strategies/list` | `beervid publish strategy list` |
+| `GET /strategies/{id}` | `beervid publish strategy get --id <strategy_id>` |
+| `POST /strategies/create` | `beervid publish strategy create`, `beervid publish run` |
+| `POST /strategies/{id}/toggle` | `beervid publish strategy enable|disable`, `beervid publish run` |
+| `DELETE /strategies/{id}` | `beervid publish strategy delete` |
+| `POST /send-records/list` | `beervid publish records` |
+
 ## Requirements
 
 - Node.js 18 or newer
@@ -135,9 +161,12 @@ beervid video list --current 1 --size 10
 beervid video publish --file ./examples/video-publish.json
 beervid video data get --id video_xxx
 beervid video run --file ./examples/video-create.json --initial-wait 300
+beervid workflow publish --file ./examples/video-create.json --publish-file ./examples/video-publish.json --initial-wait 300
 ```
 
 `video run` creates a task, watches it to a terminal state, then queries the video library.
+
+`workflow publish` creates a video task, waits for completion, reads the newest generated video from the library unless `--video-id` is provided, publishes that video with the publish JSON body, then fetches the publish task data.
 
 ### Publish
 
@@ -155,6 +184,38 @@ beervid publish run --file ./examples/publish-strategy-template.json
 ```
 
 `publish run` creates a publish strategy and enables it in one flow.
+
+### End-To-End Publish
+
+Use this when testing the full create-and-publish path:
+
+```bash
+beervid workflow publish \
+  --file ./examples/video-create.json \
+  --publish-file ./examples/video-publish.json \
+  --initial-wait 300
+```
+
+The workflow runs these steps:
+
+```text
+1. POST /video-create
+2. GET /video-create/tasks until the video task reaches a terminal state
+3. POST /videos/library/list to resolve the generated video id
+4. POST /videos/library/publish
+5. GET /video/publish-task/{publish_task_id}
+```
+
+Useful flags:
+
+```text
+--video-id <id>             publish a known video id instead of the first library result
+--skip-publish-data         skip the final publish-task lookup
+--initial-wait <seconds>    wait before polling video task status
+--interval <seconds>        polling interval
+--max-attempts <n>          max polling attempts
+--json                      print the full workflow result
+```
 
 ### Raw API Calls
 
@@ -218,6 +279,8 @@ beervid video upload --path ./assets/cover.jpg --type image
 beervid video upload --path ./assets/music.mp3 --type audio
 beervid video upload --path ./assets/intro.mp4 --type video
 ```
+
+Manual upload output includes the resolved local path, upload type, file size, and returned `file_url`. Missing files, unsupported extensions, oversized files, and upload responses without `fileUrl` are treated as CLI errors before the value is used by later requests.
 
 For `video create` and `video run`, local file paths and `http/https` URLs in these fields are uploaded automatically before the create request is submitted:
 

@@ -15,9 +15,12 @@ async function handleVideo(subcommand, rest, flags, config, deps) {
     findRecords,
     normalizeVideoPublishPayload,
     runVideoWorkflow,
+    runEndToEndPublishWorkflow,
     handleVideoData,
     handleVideoTasks,
     uploadLocalFile,
+    formatFileSize,
+    readPublishJsonInput,
   } = deps;
 
   requireApiKey(config);
@@ -55,16 +58,17 @@ async function handleVideo(subcommand, rest, flags, config, deps) {
     if (!["image", "video", "audio"].includes(fileType)) {
       fail("Upload type must be one of: image, video, audio", 1);
     }
-    const fileUrl = await uploadLocalFile({ config, filePath, fileType, apiRequest });
+    const upload = await uploadLocalFile({ config, filePath, fileType, apiRequest, returnDetails: true });
     formatOutput({
       flags,
       command: "video.upload",
-      data: { fileUrl },
+      data: upload,
       textLines: [
         "File uploaded successfully",
         `file: ${path.resolve(filePath)}`,
         `type: ${fileType}`,
-        `file_url: ${fileUrl}`,
+        `size: ${formatFileSize ? formatFileSize(upload.size) : upload.size}`,
+        `file_url: ${upload.fileUrl}`,
       ],
     });
     return;
@@ -147,6 +151,45 @@ async function handleVideo(subcommand, rest, flags, config, deps) {
         `task_id: ${result.summary.taskId}`,
         `status: ${findStatus(result.task) || "success"}`,
         `latest_video_id: ${result.summary.latestVideoId}`,
+      ],
+    });
+    return;
+  }
+
+  if (subcommand === "publish-run") {
+    const publishBody = readPublishJsonInput
+      ? readPublishJsonInput(flags)
+      : readJsonInput({ file: flags["publish-file"], stdin: flags["publish-stdin"] });
+    const result = await runEndToEndPublishWorkflow({
+      config,
+      flags,
+      videoBody: readJsonInput(flags),
+      publishBody,
+      prepareVideoCreatePayload,
+      apiRequest,
+      findTaskId,
+      findDeepValue,
+      normalizeVideoPublishPayload,
+      watchTask: deps.watchTask,
+      isSuccessStatus: deps.isSuccessStatus,
+      buildVideoLibraryListRequest,
+      findRecords,
+    });
+    formatOutput({
+      flags,
+      command: "video.publish-run",
+      data: {
+        create: result.create,
+        task: result.task,
+        videos: result.videos,
+        publish: result.publish,
+        publishTask: result.publishTask,
+      },
+      textLines: [
+        "End-to-end publish workflow completed",
+        `task_id: ${result.summary.taskId}`,
+        `video_id: ${result.summary.videoId}`,
+        `publish_task_id: ${result.summary.publishTaskId}`,
       ],
     });
     return;

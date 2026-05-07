@@ -48,6 +48,29 @@ test("publish products accepts --file body without resolving account context", a
   assert.equal(outputs[0].command, "publish.products");
 });
 
+test("publish products validates pagination flags", async () => {
+  const deps = createPublishDeps({
+    async resolveCreatorUserOpenId() {
+      return "creator_123";
+    },
+  });
+
+  await assert.rejects(
+    () => handlePublish(
+      "products",
+      [],
+      { current: "abc", "creator-user-open-id": "creator_123" },
+      { apiKey: "test-key" },
+      deps,
+    ),
+    (error) => {
+      assert.equal(error.exitCode, 1);
+      assert.match(error.message, /--current must be a positive integer/);
+      return true;
+    },
+  );
+});
+
 test("publish strategy create unwraps strategyCreateDTO before sending", async () => {
   const calls = [];
   const outputs = [];

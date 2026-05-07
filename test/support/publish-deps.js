@@ -52,6 +52,16 @@ function createPublishDeps(overrides = {}) {
     formatEnabledState(value) {
       return value;
     },
+    parsePositiveInteger(value, flagName, defaultValue) {
+      const raw = value == null || value === "" ? defaultValue : value;
+      const number = Number(raw);
+      if (!Number.isInteger(number) || number <= 0) {
+        const error = new Error(`${flagName} must be a positive integer.`);
+        error.exitCode = 1;
+        throw error;
+      }
+      return number;
+    },
     findName() {
       return null;
     },

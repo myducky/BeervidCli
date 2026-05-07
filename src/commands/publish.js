@@ -14,6 +14,7 @@ async function handlePublish(subcommand, rest, flags, config, deps) {
     toggleStrategy,
     findEnabledState,
     formatEnabledState,
+    parsePositiveInteger,
     printSubcommandHelp,
   } = deps;
 
@@ -23,8 +24,8 @@ async function handlePublish(subcommand, rest, flags, config, deps) {
     const body = flags.file || flags.stdin
       ? readJsonInput(flags)
       : {
-          current: Number(flags.current || 1),
-          size: Number(flags.size || 10),
+          current: parsePositiveInteger(flags.current, "--current", 1),
+          size: parsePositiveInteger(flags.size, "--size", 10),
           creatorUserOpenId: await resolveCreatorUserOpenId(config, flags),
         };
     const creatorUserOpenId =

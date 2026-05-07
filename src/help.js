@@ -12,6 +12,7 @@ const HELP_TOPICS = {
     "  templates   Query video templates",
     "  video       Manage video generation tasks and library",
     "  publish     Manage publishing workflows and records",
+    "  workflow    Run multi-step end-to-end flows",
     "  raw         Call raw Beervid API endpoints",
     "  completion  Generate shell completion scripts",
     "",
@@ -58,6 +59,7 @@ const HELP_TOPICS = {
     "  beervid video publish --file <payload.json>",
     "  beervid video data get --id <video_id>",
     "  beervid video run --file <payload.json> [--initial-wait <seconds>] [--confirm-veo-two-8s]",
+    "  beervid video publish-run --file <video.json> --publish-file <publish.json> [--initial-wait <seconds>]",
     "",
     "Video Create Notes:",
     "  in this system, techType=veo means cinematic style",
@@ -91,6 +93,12 @@ const HELP_TOPICS = {
     "  beervid publish strategy delete --id <strategy_id>",
     "  beervid publish records",
     "  beervid publish run --file <strategy.json>",
+  ],
+  workflow: [
+    "Usage:",
+    "  beervid workflow publish --file <video.json> --publish-file <publish.json> [--initial-wait <seconds>]",
+    "",
+    "Runs video create, task watch, video library lookup, video publish, and publish-task lookup.",
   ],
   "publish.strategy": [
     "Usage:",

@@ -38,8 +38,8 @@ function handleCompletion(subcommand, deps) {
   }
   const scripts = {
     zsh: "#compdef beervid\n_arguments '*::arg:->args'",
-    bash: "complete -W 'auth accounts labels templates video publish raw completion' beervid",
-    fish: "complete -c beervid -f -a 'auth accounts labels templates video publish raw completion'",
+    bash: "complete -W 'auth accounts labels templates video publish workflow raw completion' beervid",
+    fish: "complete -c beervid -f -a 'auth accounts labels templates video publish workflow raw completion'",
   };
   process.stdout.write(`${scripts[subcommand]}\n`);
 }
