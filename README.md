@@ -1,226 +1,315 @@
 # Beervid CLI
 
-First-pass zero-dependency CLI for the Beervid Open API.
+Zero-dependency Node.js CLI for the Beervid Open API.
 
-## Positioning
+The CLI covers authentication, TikTok account lookup, labels, templates, video generation, video library publishing, publish strategies, publish records, and raw endpoint calls.
 
-This CLI targets the Beervid product-side API surface used for video generation, templates, publish strategies, and library workflows.
+## Requirements
 
-It is not the same thing as the Beervid third-party application Open API:
+- Node.js 18 or newer
+- A Beervid Open API key
 
-- Use this CLI when you want broad internal/product capabilities such as `labels`, `templates`, `video create`, `video tasks`, `video list`, `publish strategy`, and `raw`.
-- Use a separate third-party/Open API tool when your primary goal is TT/TTS OAuth onboarding or app-facing publish flows.
-
-## Quick Start
-
-```bash
-node ./bin/beervid.js auth set-key YOUR_API_KEY
-node ./bin/beervid.js auth test
-node ./bin/beervid.js auth check
-node ./bin/beervid.js auth profile
-node ./bin/beervid.js accounts list
-node ./bin/beervid.js labels list
-node ./bin/beervid.js templates list
-node ./bin/beervid.js templates get --id template_xxx
-node ./bin/beervid.js video upload --path ./assets/cover.jpg --type image
-node ./bin/beervid.js video create --file ./examples/video-create.json
-node ./bin/beervid.js video tasks get --task-id task_xxx
-node ./bin/beervid.js video tasks watch --task-id task_xxx
-node ./bin/beervid.js video list
-node ./bin/beervid.js video publish --file ./examples/video-publish.json
-node ./bin/beervid.js video data get --id video_xxx
-node ./bin/beervid.js publish strategy list
-node ./bin/beervid.js publish products --creator-user-open-id creator_open_id_xxx
-node ./bin/beervid.js publish strategy create --file ./examples/publish-strategy-template.json
-node ./bin/beervid.js publish strategy enable --id strategy_xxx
-node ./bin/beervid.js publish strategy get --id strategy_xxx
-node ./bin/beervid.js publish strategy delete --id strategy_xxx
-node ./bin/beervid.js publish records
-```
-
-## Install
-
-Install from npm:
+## Installation
 
 ```bash
 npm install -g beervid-cli
 beervid --help
+```
+
+The package exposes two equivalent binaries:
+
+```bash
+beervid --help
 beervid-cli --help
 ```
 
-Or run it without installing globally:
+You can also run without installing globally:
 
 ```bash
 npx beervid-cli --help
-npx beervid-cli auth set-key YOUR_API_KEY
-npx beervid-cli auth test
 ```
 
-Published binary names:
-
-- `beervid`
-- `beervid-cli`
-
-Install from the local repo while iterating:
+For local development:
 
 ```bash
 npm link
 beervid --help
 ```
 
+If zsh cannot find `beervid` after a global install, add npm's global bin directory to `PATH`:
+
+```bash
+export PATH="$(npm prefix -g)/bin:$PATH"
+```
+
+## Authentication
+
+Save an API key:
+
+```bash
+beervid auth set-key YOUR_API_KEY
+```
+
+Check the configured key and connection:
+
+```bash
+beervid auth status
+beervid auth test
+beervid auth check
+beervid auth profile
+```
+
+Remove the saved key:
+
+```bash
+beervid auth clear
+```
+
+Configuration is stored at:
+
+```text
+~/.config/beervid/config.json
+```
+
+You can override configuration with flags or environment variables:
+
+```bash
+BEERVID_API_KEY=YOUR_API_KEY beervid auth test
+beervid --api-key YOUR_API_KEY --base-url https://open.beervid.ai auth test
+beervid --config-path ./config.json auth status
+```
+
+## Global Options
+
+```text
+--json
+--verbose
+--quiet
+--timeout <ms>
+--api-key <key>
+--base-url <url>
+--config-path <path>
+```
+
+Pagination flags such as `--current` and `--size` must be positive integers. Timing flags such as `--timeout`, `--interval`, and `--initial-wait` are validated before requests are sent.
+
+## Quick Start
+
+```bash
+beervid auth set-key YOUR_API_KEY
+beervid auth test
+beervid accounts list
+beervid labels list
+beervid templates list
+beervid video create --file ./examples/video-create.json
+beervid video tasks watch --task-id task_xxx --initial-wait 300
+beervid video list --current 1 --size 5
+```
+
+## Commands
+
+### Accounts
+
+```bash
+beervid accounts list [--shoppable-type <ALL|TT|TTS>] [--keyword <text>] [--current <n>] [--size <n>]
+beervid accounts shoppable [--keyword <text>] [--current <n>] [--size <n>]
+```
+
+### Labels And Templates
+
+```bash
+beervid labels list
+beervid templates list
+beervid templates get --id template_xxx
+```
+
+### Video
+
+```bash
+beervid video upload --path ./assets/cover.jpg --type image
+beervid video create --file ./examples/video-create.json
+beervid video tasks list
+beervid video tasks get --task-id task_xxx
+beervid video tasks watch --task-id task_xxx --initial-wait 300
+beervid video list --current 1 --size 10
+beervid video publish --file ./examples/video-publish.json
+beervid video data get --id video_xxx
+beervid video run --file ./examples/video-create.json --initial-wait 300
+```
+
+`video run` creates a task, watches it to a terminal state, then queries the video library.
+
+### Publish
+
+```bash
+beervid publish products --creator-user-open-id creator_open_id_xxx
+beervid publish products --account-id account_xxx
+beervid publish strategy list
+beervid publish strategy get --id strategy_xxx
+beervid publish strategy create --file ./examples/publish-strategy-template.json
+beervid publish strategy enable --id strategy_xxx
+beervid publish strategy disable --id strategy_xxx
+beervid publish strategy delete --id strategy_xxx
+beervid publish records
+beervid publish run --file ./examples/publish-strategy-template.json
+```
+
+`publish run` creates a publish strategy and enables it in one flow.
+
+### Raw API Calls
+
+Use `raw` when an endpoint is not wrapped yet:
+
+```bash
+beervid raw get /templates/options
+beervid raw post /send-records/list --file ./examples/publish-records.json
+```
+
+Paths are resolved under `/api/v1/beervid`.
+
+### Completion
+
+```bash
+beervid completion zsh
+beervid completion bash
+beervid completion fish
+```
+
+## JSON Input
+
+Commands that submit request bodies accept JSON from a file or stdin:
+
+```bash
+beervid video create --file ./examples/video-create.json
+cat ./examples/video-create.json | beervid video create --stdin
+```
+
+Invalid JSON is reported as a CLI error with the source path or `stdin`.
+
+## Video Create Rules
+
+`video create` and `video run` validate important payload rules locally before calling the API.
+
+- `techType: "veo"` is the cinematic style path.
+- `techType: "sora"`, `sora_azure`, `sora_h_pro`, and `sora_aio` are the realistic/SORA-family paths.
+- VEO `segmentCount` maps to duration: `1=8s`, `2=16s`, `3=24s`, `4=32s`.
+- A single-fragment VEO request with `segmentCount: 2` means two internal 8-second chapters, not one native 16-second take. Confirm it explicitly with `--confirm-veo-two-8s`.
+- SORA-family requests must use exactly one fragment, and that fragment represents one 15-second generation.
+- `fragmentList.length` should match the number of intended UI chapters or scenes.
+- `videoScale` accepts `9:16` or `16:9`.
+- `portraitImages` is VEO-only, allows at most one image, and requires `useCoverFrame: true` when `videoScale` is `9:16`.
+- `productReferenceImages` allows at most three images for VEO and one image for SORA-family requests.
+- `nineGridImages` is SORA-family only, allows at most nine images, and must be paired with `productReferenceImages`.
+- `spliceMethod: "LONG_TAKE"` is not allowed for SORA-family requests or VEO fragments with `segmentCount: 1`.
+- `fragmentList[].videoContent` is sent verbatim. The CLI does not rewrite, translate, trim, summarize, or otherwise alter prompt text.
+
+Example confirmed VEO single-fragment 16-second request:
+
+```bash
+beervid video create --file ./examples/video-create-lg-c5-16s-single-fragment.json --confirm-veo-two-8s
+```
+
+## Asset Uploads
+
+Manual upload:
+
+```bash
+beervid video upload --path ./assets/cover.jpg --type image
+beervid video upload --path ./assets/music.mp3 --type audio
+beervid video upload --path ./assets/intro.mp4 --type video
+```
+
+For `video create` and `video run`, local file paths and `http/https` URLs in these fields are uploaded automatically before the create request is submitted:
+
+```text
+bgmList
+headVideo
+endVideo
+fragmentList[].productReferenceImages
+fragmentList[].nineGridImages
+fragmentList[].portraitImages
+```
+
+The CLI replaces each local path or remote URL with the returned `fileUrl`.
+
+Supported upload limits:
+
+```text
+image: .jpg, .jpeg, .png up to 7MB
+video: .mp4, .mov up to 10MB
+audio: .wav, .mp3 up to 5MB
+```
+
+If the upload endpoint succeeds but does not return a `fileUrl`, the CLI treats it as a failure.
+
+## Examples
+
+Ready-to-send or request-shape examples:
+
+```text
+examples/video-create.json
+examples/video-create-lg-c5-16s.json
+examples/video-create-lg-c5-16s-single-fragment.json
+examples/video-create-lg-c5-16s-user-request.json
+examples/video-create-lg-c5-verbatim-user-prompt.json
+examples/video-create-xiaomi-sora-15s-verbatim-user-prompt.json
+examples/video-list.json
+examples/publish-records.json
+```
+
+Templates that require replacing placeholder values:
+
+```text
+examples/video-publish.json
+examples/publish-products.json
+examples/publish-strategy-template.json
+```
+
 ## Development
 
-Current code layout:
+Project layout:
 
-- `src/commands/` contains command-family handlers
-- `src/workflows/` contains multi-step command orchestration
-- `src/core.js` contains pure normalization and status helpers
-- `src/help.js` contains shared CLI help text
+```text
+bin/beervid.js             executable entry
+src/cli.js                 command routing and dependency wiring
+src/commands/              command-family handlers
+src/config.js              config loading and API key persistence
+src/core.js                pure response and payload helpers
+src/http.js                fetch wrapper and envelope handling
+src/requests.js            request-body builders
+src/tasks.js               task polling and status helpers
+src/uploads.js             upload validation and multipart helpers
+src/video-payload.js       video-create validation and asset preparation
+src/workflows/             multi-step command workflows
+test/                      node:test coverage
+```
 
-Local helper tests:
+Run checks:
 
 ```bash
 npm test
 npm run test:unit
 npm run test:commands
 npm run test:cli
+npm run check:syntax
+npm run pack:check
 ```
 
-Current automated test layout:
+`npm run pack:check` uses the project-local `.npm-cache` directory so it does not depend on the permissions of `~/.npm`.
 
-- `test/unit/`: pure helpers and transport envelope logic
-- `test/cli/`: CLI-only validation rules
-- `test/commands/`: command handler orchestration and request-shape regressions
-- `test/support/`: lightweight test doubles shared by command tests
+## Error Codes
 
-## Example File Guidance
+The CLI sets explicit exit codes for common failures:
 
-These example files are ready to use as-is for request shape testing:
-
-- `examples/video-create.json`
-- `examples/video-create-lg-c5-16s.json`
-- `examples/video-create-lg-c5-16s-single-fragment.json`
-- `examples/video-create-lg-c5-16s-user-request.json`
-- `examples/video-create-lg-c5-verbatim-user-prompt.json`
-- `examples/video-create-xiaomi-sora-15s-verbatim-user-prompt.json`
-- `examples/video-list.json`
-- `examples/publish-records.json`
-
-These files are editable templates and require you to replace placeholder values before sending them to the API:
-
-- `examples/video-publish.json`
-- `examples/publish-products.json`
-- `examples/publish-strategy-template.json`
-
-For `examples/publish-strategy-template.json`, the bundled `date` is intentionally set to a valid far-future value so the CLI's local validation still passes before you replace the account and template placeholders.
-
-## Cookbook
-
-### Check auth and account access
-
-```bash
-node ./bin/beervid.js auth set-key YOUR_API_KEY
-node ./bin/beervid.js auth test
-node ./bin/beervid.js auth profile
-node ./bin/beervid.js accounts list
-node ./bin/beervid.js accounts shoppable
+```text
+1  invalid input or usage
+2  missing API key
+3  unauthorized API response
+4  request, transport, upload, or API envelope failure
+5  expected response data not found
+6  task watch timed out
 ```
 
-### Generate a video from local JSON and watch it finish
+## License
 
-```bash
-node ./bin/beervid.js video create --file ./examples/video-create.json
-node ./bin/beervid.js video tasks watch --task-id task_xxx
-node ./bin/beervid.js video list --current 1 --size 5
-```
-
-If you want the CLI to do the create-and-watch flow in one command:
-
-```bash
-node ./bin/beervid.js video run --file ./examples/video-create.json
-```
-
-If you intentionally submit a single-fragment `veo` 16-second request, confirm that the user really wants two internal 8-second chapters:
-
-```bash
-node ./bin/beervid.js video create --file ./examples/video-create-lg-c5-16s-single-fragment.json --confirm-veo-two-8s
-node ./bin/beervid.js video run --file ./examples/video-create-lg-c5-16s-single-fragment.json --confirm-veo-two-8s
-```
-
-For real generation workloads, the platform commonly needs about 5-10 minutes. Prefer waiting about 5 minutes before the first status query instead of polling immediately:
-
-```bash
-node ./bin/beervid.js video tasks watch --task-id task_xxx --initial-wait 300
-node ./bin/beervid.js video run --file ./examples/video-create.json --initial-wait 300
-```
-
-### Upload local or remote assets before create
-
-```bash
-node ./bin/beervid.js video upload --path ./assets/cover.jpg --type image
-node ./bin/beervid.js video upload --path ./assets/music.mp3 --type audio
-```
-
-For `video create` and `video run`, local paths and `http/https` asset URLs inside the payload are auto-uploaded before submit.
-
-### Inspect labels and templates before building a payload
-
-```bash
-node ./bin/beervid.js labels list
-node ./bin/beervid.js templates list
-node ./bin/beervid.js templates get --id template_xxx
-```
-
-### Create, enable, and inspect a publish strategy
-
-```bash
-# Replace __REPLACE_WITH_...__ placeholders in the template first.
-node ./bin/beervid.js publish strategy create --file ./examples/publish-strategy-template.json
-node ./bin/beervid.js publish strategy enable --id strategy_xxx
-node ./bin/beervid.js publish strategy get --id strategy_xxx
-node ./bin/beervid.js publish records
-```
-
-If you want the CLI to create and enable in one pass:
-
-```bash
-# Replace __REPLACE_WITH_...__ placeholders in the template first.
-node ./bin/beervid.js publish run --file ./examples/publish-strategy-template.json
-```
-
-### Debug an endpoint that is not wrapped yet
-
-```bash
-node ./bin/beervid.js raw get /templates/options
-node ./bin/beervid.js raw post /send-records/list --file ./examples/publish-records.json
-```
-
-## Video Create Rules
-
-- In this system, `techType: "veo"` corresponds to the cinematic style path, and `techType: "sora"`, `sora_azure`, `sora_h_pro`, and `sora_aio` correspond to the realistic style path.
-- If the user explicitly selected a style, the submitted payload and user-facing explanations should stay aligned with that mapping. Do not describe a `veo` request as `写实`, and do not describe a `sora` request as `电影`.
-- `techType: "veo"` means the cinematic model. In each `fragmentList` item, `segmentCount` maps to duration: `1=8s`, `2=16s`, `3=24s`, `4=32s`.
-- A single-fragment `veo` request with `segmentCount: 2` does not mean one native 16-second take. It means two internal 8-second chapters in one fragment, so the CLI now requires explicit confirmation via `--confirm-veo-two-8s`.
-- `techType: "sora"`, `sora_azure`, `sora_h_pro`, and `sora_aio` use the SORA family rules and the realistic style path. Each request must use exactly one fragment, and that fragment corresponds to one 15-second generation.
-- `fragmentList.length` matches the number of UI chapters or scenes. Two 8-second VEO scenes should be modeled as two fragment objects with `segmentCount: 1` each.
-- `videoScale` controls aspect ratio and accepts `9:16` or `16:9`.
-- `portraitImages` is VEO-only, allows at most 1 image, and requires `useCoverFrame: true` when `videoScale` is `9:16`.
-- `productReferenceImages` allows at most 3 images for VEO and at most 1 image for each SORA-family fragment.
-- `nineGridImages` allows at most 9 images for each SORA-family fragment, and `nineGridImages` plus `productReferenceImages` must either both be provided or both be empty.
-- `spliceMethod: "LONG_TAKE"` is not allowed for SORA-family fragments or for VEO fragments when `segmentCount` is `1`.
-- `fragmentList[].videoContent` is treated as verbatim user input. The CLI must not rewrite, translate, trim, summarize, or otherwise alter the user's prompt text before submission.
-- Real generation commonly takes around 5-10 minutes, so a delayed first poll such as `--initial-wait 300` is recommended for `video tasks watch` and `video run`.
-
-## Notes
-
-- `video create` accepts raw open-API request bodies plus older `formData`/`request` wrappers and normalizes them before sending.
-- `video create` and `video run` will auto-upload both local file paths and remote `http/https` URLs found in `productReferenceImages`, `nineGridImages`, `portraitImages`, `bgmList`, `headVideo`, and `endVideo`, then replace them with the returned `fileUrl` before submitting the task.
-- `headVideo` and `endVideo` correspond to the cover/opening video and ending video in the product UI flow, so they follow the same upload-then-submit behavior as product images, portrait images, and BGM.
-- `video publish` accepts either `businessId` or the older `accountId` alias and maps it to the open API shape.
-- `publish strategy create` accepts the raw open-API request body plus the older `strategyCreateDTO` wrapper.
-- `video create` and `video run` now validate `techType`, `fragmentList`, `segmentCount`, and `spliceMethod` before sending the request.
-- `video upload` sends multipart form data, requires `--path` plus `--type image|video|audio`, and checks extension/size limits before upload.
-- `video tasks get` queries the task list endpoint and matches by `task_id`.
-- `video tasks watch` polls until the task reaches a terminal state.
-- `video list` queries the video library and should be treated as the final source of generated videos.
-- `publish strategy enable` and `publish strategy disable` now call the documented toggle API with an explicit `enable` boolean, so they are safe to run repeatedly.
+MIT

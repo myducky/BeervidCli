@@ -1,5 +1,6 @@
 const fs = require("fs");
 const { printHelp: renderHelp, getHelpLines } = require("./help");
+const { fail } = require("./validation");
 
 function parseArgs(argv) {
   const positionals = [];
@@ -34,14 +35,22 @@ function parseArgs(argv) {
 
 function readJsonInput(flags, options = {}) {
   if (flags.file) {
-    return JSON.parse(fs.readFileSync(flags.file, "utf8"));
+    return parseJsonText(fs.readFileSync(flags.file, "utf8"), flags.file);
   }
   if (flags.stdin) {
     const stdin = fs.readFileSync(0, "utf8");
-    return stdin ? JSON.parse(stdin) : {};
+    return stdin ? parseJsonText(stdin, "stdin") : {};
   }
   if (options.optional) return undefined;
   fail("Missing JSON input. Use --file <path> or --stdin.", 1);
+}
+
+function parseJsonText(text, sourceLabel) {
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    fail(`Invalid JSON in ${sourceLabel}: ${error.message}`, 1);
+  }
 }
 
 function formatOutput({ flags, command, data, textLines = [] }) {
@@ -58,12 +67,6 @@ function printHelp() {
 
 function printSubcommandHelp(topic) {
   process.stdout.write(`${getHelpLines(topic).join("\n")}\n`);
-}
-
-function fail(message, exitCode = 1) {
-  const error = new Error(message);
-  error.exitCode = exitCode;
-  throw error;
 }
 
 function sleep(ms) {

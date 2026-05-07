@@ -8,10 +8,7 @@ async function handleVideo(subcommand, rest, flags, config, deps) {
     formatOutput,
     findStatus,
     fail,
-    fs,
     path,
-    validateUploadFile,
-    mimeTypeForFileName,
     findDeepValue,
     printSubcommandHelp,
     buildVideoLibraryListRequest,
@@ -20,6 +17,7 @@ async function handleVideo(subcommand, rest, flags, config, deps) {
     runVideoWorkflow,
     handleVideoData,
     handleVideoTasks,
+    uploadLocalFile,
   } = deps;
 
   requireApiKey(config);
@@ -57,36 +55,16 @@ async function handleVideo(subcommand, rest, flags, config, deps) {
     if (!["image", "video", "audio"].includes(fileType)) {
       fail("Upload type must be one of: image, video, audio", 1);
     }
-    if (!fs.existsSync(filePath)) {
-      fail(`File not found: ${filePath}`, 1);
-    }
-    validateUploadFile(filePath, fileType);
-
-    const formData = new FormData();
-    formData.set(
-      "file",
-      new Blob([fs.readFileSync(filePath)], { type: mimeTypeForFileName(path.basename(filePath), fileType) }),
-      path.basename(filePath),
-    );
-    formData.set("fileType", fileType);
-    const response = await apiRequest(config, {
-      method: "POST",
-      path: "/video-create/upload",
-      formData,
-    });
-    if (response.data && (response.data.error === true || response.data.success === false || Number(response.data.code) !== 0)) {
-      fail(response.data.message || `Upload failed for: ${filePath}`, 4);
-    }
-    const fileUrl = findDeepValue(response.data, ["fileUrl", "url"]);
+    const fileUrl = await uploadLocalFile({ config, filePath, fileType, apiRequest });
     formatOutput({
       flags,
       command: "video.upload",
-      data: response.data,
+      data: { fileUrl },
       textLines: [
         "File uploaded successfully",
         `file: ${path.resolve(filePath)}`,
         `type: ${fileType}`,
-        ...(fileUrl ? [`file_url: ${fileUrl}`] : []),
+        `file_url: ${fileUrl}`,
       ],
     });
     return;

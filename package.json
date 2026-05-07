@@ -40,6 +40,7 @@
     "test:commands": "node --test \"./test/commands/**/*.test.js\"",
     "test:cli": "node --test \"./test/cli/**/*.test.js\"",
     "test:smoke": "node ./bin/beervid.js --help",
-    "pack:check": "npm pack --dry-run"
+    "check:syntax": "node --check ./bin/beervid.js && find ./src ./test -name '*.js' -print0 | xargs -0 -n 1 node --check",
+    "pack:check": "npm --cache ./.npm-cache pack --dry-run"
   }
 }
