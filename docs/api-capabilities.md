@@ -430,10 +430,10 @@ Request fields:
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `creatorUserOpenId` | string | yes | Account creator user open id from `/tt-accounts`. |
-| `request.current` | number | no | Page number. |
-| `request.size` | number | no | Page size. |
+| `current` | number | no | Page number. |
+| `size` | number | no | Page size. |
 
-Legacy/simple payloads with top-level `current` and `size` may appear in examples, but the CLI-generated request wraps pagination in `request`.
+`/shop-products/list` uses top-level `current` and `size`. Do not wrap pagination in `request` for this endpoint.
 
 Response fields:
 - `records` or `products`: product list.
@@ -721,4 +721,3 @@ beervid publish run --file ./examples/publish-strategy-template.json --json
 | Publish records | `POST /send-records/list` | `beervid publish records` |
 | Video data | `GET /video/publish-task/{id}` | `beervid video data get` |
 | Raw new endpoints | any supported HTTP method | `beervid raw <method> <path>` |
-

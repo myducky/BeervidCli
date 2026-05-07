@@ -41,10 +41,8 @@ test("publish products accepts --file body without resolving account context", a
     path: "/shop-products/list",
     body: {
       creatorUserOpenId: "__REPLACE_WITH_CREATOR_USER_OPEN_ID__",
-      request: {
-        current: 1,
-        size: 20,
-      },
+      current: 1,
+      size: 20,
     },
   });
   assert.equal(outputs.length, 1);
@@ -108,10 +106,8 @@ test("publish products resolves account id to creatorUserOpenId for product quer
     method: "POST",
     path: "/shop-products/list",
     body: {
-      request: {
-        current: 2,
-        size: 20,
-      },
+      current: 2,
+      size: 20,
       creatorUserOpenId: "creator_open_1",
     },
   });
@@ -181,10 +177,8 @@ test("publish products includes creatorUserOpenId only when explicitly provided"
   );
 
   assert.deepEqual(calls[0].body, {
-    request: {
-      current: 1,
-      size: 10,
-    },
+    current: 1,
+    size: 10,
     creatorUserOpenId: "creator_open_1",
   });
 });

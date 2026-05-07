@@ -7,10 +7,8 @@ function createPublishDeps(overrides = {}) {
     readJsonInput() {
       return {
         creatorUserOpenId: "__REPLACE_WITH_CREATOR_USER_OPEN_ID__",
-        request: {
-          current: 1,
-          size: 20,
-        },
+        current: 1,
+        size: 20,
       };
     },
     async apiRequest(_config, request) {

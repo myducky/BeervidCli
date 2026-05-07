@@ -263,10 +263,8 @@ async function handlePublishStrategy(subcommand, flags, config, deps) {
 
 async function buildProductsRequest(config, flags, deps) {
   const body = {
-    request: {
-      current: deps.parsePositiveInteger(flags.current, "--current", 1),
-      size: deps.parsePositiveInteger(flags.size, "--size", 10),
-    },
+    current: deps.parsePositiveInteger(flags.current, "--current", 1),
+    size: deps.parsePositiveInteger(flags.size, "--size", 10),
   };
   if (!flags["account-id"] && !flags["creator-user-open-id"]) {
     const error = new Error("Usage: beervid publish products --creator-user-open-id <open_id> [--current <n>] [--size <n>]\n   or: beervid publish products --account-id <business_id> [--current <n>] [--size <n>]");
