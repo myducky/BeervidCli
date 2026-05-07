@@ -2,6 +2,7 @@ async function handleAccounts(subcommand, flags, config, deps) {
   const {
     requireApiKey,
     copyOptionalFlag,
+    parsePositiveInteger,
     apiRequest,
     findRecords,
     formatOutput,
@@ -12,8 +13,8 @@ async function handleAccounts(subcommand, flags, config, deps) {
 
   if (subcommand === "list") {
     const query = {};
-    copyOptionalFlag(flags, query, "current");
-    copyOptionalFlag(flags, query, "size");
+    query.current = parsePositiveInteger(flags.current, "--current", 1);
+    query.size = parsePositiveInteger(flags.size, "--size", 10);
     copyOptionalFlag(flags, query, "keyword");
     query.shoppableType = flags["shoppable-type"] || "ALL";
     const response = await apiRequest(config, {
@@ -45,8 +46,8 @@ async function handleAccounts(subcommand, flags, config, deps) {
       method: "GET",
       path: "/tt-accounts",
       query: {
-        current: flags.current || 1,
-        size: flags.size || 50,
+        current: parsePositiveInteger(flags.current, "--current", 1),
+        size: parsePositiveInteger(flags.size, "--size", 50),
         keyword: flags.keyword,
         shoppableType: "TTS",
       },

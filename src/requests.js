@@ -1,4 +1,4 @@
-const { parsePositiveInteger } = require("./validation");
+const { parseNumber, parsePositiveInteger } = require("./validation");
 
 function buildListRequest(flags) {
   const request = {
@@ -16,7 +16,7 @@ function buildVideoLibraryListRequest(flags) {
   copyOptionalCsvFlag(flags, body, "task-ids", "taskIds");
   copyOptionalCsvFlag(flags, body, "strategy-ids", "strategyIds");
   copyOptionalCsvFlag(flags, body, "business-ids", "businessIds");
-  copyOptionalCsvFlag(flags, body, "audit-status", "auditStatus", Number);
+  copyOptionalCsvFlag(flags, body, "audit-status", "auditStatus", (value) => parseNumber(value, "--audit-status"));
   copyOptionalCsvFlag(flags, body, "label-ids", "labelIds");
   copyOptionalCsvFlag(flags, body, "date-range", "dateRange");
   return body;
@@ -25,7 +25,7 @@ function buildVideoLibraryListRequest(flags) {
 function buildStrategyListRequest(flags) {
   const body = buildListRequest(flags);
   copyOptionalFlag(flags, body, "name");
-  copyOptionalFlag(flags, body, "status", "status", Number);
+  copyOptionalFlag(flags, body, "status", "status", (value) => parseNumber(value, "--status"));
   copyOptionalCsvFlag(flags, body, "date-range", "dateRange");
   copyOptionalFlag(flags, body, "sort");
   copyOptionalFlag(flags, body, "order");
@@ -37,7 +37,7 @@ function buildSendRecordsRequest(flags) {
   const body = buildListRequest(flags);
   copyOptionalFlag(flags, body, "strategy-id", "strategyId");
   copyOptionalFlag(flags, body, "business-id", "businessId");
-  copyOptionalFlag(flags, body, "status", "status", Number);
+  copyOptionalFlag(flags, body, "status", "status", (value) => parseNumber(value, "--status"));
   copyOptionalCsvFlag(flags, body, "work-type", "workType");
   copyOptionalFlag(flags, body, "sort");
   copyOptionalFlag(flags, body, "order");

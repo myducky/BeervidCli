@@ -1,0 +1,22 @@
+{
+  "name": "Production CLI smoke test strategy",
+  "businessId": "__REPLACE_WITH_BUSINESS_ID__",
+  "strategyType": "TEMPLATE",
+  "contentTemplates": [
+    "__REPLACE_WITH_TEMPLATE_ID__"
+  ],
+  "pushMode": 0,
+  "pushTimeType": 0,
+  "pushConfig": {
+    "productAnchorStatus": false,
+    "execType": "BATCH",
+    "batchExecutedAt": [
+      {
+        "date": "2099-12-31",
+        "times": [
+          "10:00"
+        ]
+      }
+    ]
+  }
+}

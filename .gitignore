@@ -2,3 +2,5 @@
 node_modules/
 *.tgz
 tmp/
+.env.production-test
+examples/production/*.local.json

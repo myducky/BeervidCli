@@ -10,6 +10,16 @@ function createAccountsDeps(overrides = {}) {
     copyOptionalFlag(flags, target, key) {
       if (flags[key] != null) target[key] = flags[key];
     },
+    parsePositiveInteger(value, flagName, defaultValue) {
+      const raw = value == null || value === "" ? defaultValue : value;
+      const number = Number(raw);
+      if (!Number.isInteger(number) || number <= 0) {
+        const error = new Error(`${flagName} must be a positive integer.`);
+        error.exitCode = 1;
+        throw error;
+      }
+      return number;
+    },
     async apiRequest() {
       throw new Error("apiRequest should be stubbed in this test");
     },
@@ -44,8 +54,8 @@ test("accounts list forwards optional filters and defaults shoppableType to ALL"
       method: "GET",
       path: "/tt-accounts",
       query: {
-        current: "2",
-        size: "5",
+        current: 2,
+        size: 5,
         keyword: "shop",
         shoppableType: "ALL",
       },
@@ -85,4 +95,30 @@ test("accounts shoppable hard-codes TTS query mode", async () => {
   ]);
   assert.equal(deps.calls[0].command, "accounts.shoppable");
   assert.match(deps.calls[0].textLines.join("\n"), /1 shoppable account found/);
+});
+
+test("accounts list rejects invalid pagination flags", async () => {
+  const deps = createAccountsDeps();
+
+  await assert.rejects(
+    () => handleAccounts("list", { current: "bad" }, { apiKey: "test-key" }, deps),
+    (error) => {
+      assert.equal(error.exitCode, 1);
+      assert.match(error.message, /--current must be a positive integer/);
+      return true;
+    },
+  );
+});
+
+test("accounts shoppable rejects invalid pagination flags", async () => {
+  const deps = createAccountsDeps();
+
+  await assert.rejects(
+    () => handleAccounts("shoppable", { size: "bad" }, { apiKey: "test-key" }, deps),
+    (error) => {
+      assert.equal(error.exitCode, 1);
+      assert.match(error.message, /--size must be a positive integer/);
+      return true;
+    },
+  );
 });

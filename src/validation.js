@@ -35,10 +35,19 @@ function parseNonNegativeNumber(value, flagName, defaultValue = 0) {
   return number;
 }
 
+function parseNumber(value, flagName) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) {
+    fail(`${flagName} must be a number.`, 1);
+  }
+  return number;
+}
+
 module.exports = {
   createCliError,
   fail,
   parseNonNegativeNumber,
+  parseNumber,
   parsePositiveInteger,
   parsePositiveNumber,
 };

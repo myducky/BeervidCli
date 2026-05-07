@@ -37,7 +37,7 @@ async function runEndToEndPublishWorkflow({
   const listed = await apiRequest(config, {
     method: "POST",
     path: "/videos/library/list",
-    body: buildVideoLibraryListRequest(flags),
+    body: buildVideoLibraryListRequest({ ...flags, "task-ids": taskId }),
   });
   const records = findRecords(listed.data);
   const videoId = resolveVideoId(records, flags);

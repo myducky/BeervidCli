@@ -1,0 +1,25 @@
+{
+  "name": "Production CLI smoke test - DO NOT USE FOR ADS",
+  "techType": "veo",
+  "videoScale": "9:16",
+  "dialogueLanguage": "English (American accent)",
+  "showTitle": false,
+  "showSubtitle": false,
+  "noBgmMusic": true,
+  "generatedQuantity": 1,
+  "labelIds": [
+    "__REPLACE_WITH_LABEL_ID_OR_REMOVE_ARRAY__"
+  ],
+  "fragmentList": [
+    {
+      "uid": "prod-smoke-001",
+      "videoContent": "Create a short vertical production smoke-test product video. Use neutral generic product visuals, no claims, no discount language, and no copyrighted brand references.",
+      "useCoverFrame": false,
+      "segmentCount": 1,
+      "spliceMethod": "SPLICE",
+      "productReferenceImages": [
+        "__REPLACE_WITH_UPLOADED_IMAGE_FILE_URL_OR_REMOVE_ARRAY__"
+      ]
+    }
+  ]
+}

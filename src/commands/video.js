@@ -135,6 +135,7 @@ async function handleVideo(subcommand, rest, flags, config, deps) {
       apiRequest,
       findTaskId,
       watchTask: deps.watchTask,
+      isSuccessStatus: deps.isSuccessStatus,
       buildVideoLibraryListRequest,
       findRecords,
     });

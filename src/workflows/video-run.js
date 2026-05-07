@@ -6,6 +6,7 @@ async function runVideoWorkflow({
   apiRequest,
   findTaskId,
   watchTask,
+  isSuccessStatus,
   buildVideoLibraryListRequest,
   findRecords,
 }) {
@@ -23,10 +24,15 @@ async function runVideoWorkflow({
   }
 
   const watched = await watchTask(config, taskId, flags);
+  if (isSuccessStatus && !isSuccessStatus(watched)) {
+    const error = new Error(`Video task failed: ${watched.errorMessage || watched.status || taskId}`);
+    error.exitCode = 5;
+    throw error;
+  }
   const listed = await apiRequest(config, {
     method: "POST",
     path: "/videos/library/list",
-    body: buildVideoLibraryListRequest(flags),
+    body: buildVideoLibraryListRequest({ ...flags, "task-ids": taskId }),
   });
   const records = findRecords(listed.data);
 

@@ -51,7 +51,7 @@ const {
   fail,
   sleep,
 } = require("./utils");
-const { parsePositiveInteger } = require("./validation");
+const { parseNumber, parsePositiveInteger } = require("./validation");
 
 async function main(argv) {
   const parsed = parseArgs(argv);
@@ -140,6 +140,7 @@ const commandDeps = {
   watchTask,
   getConfigPath,
   parsePositiveInteger,
+  parseNumber,
 };
 
 function requireApiKey(config) {

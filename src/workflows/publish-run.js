@@ -20,7 +20,7 @@ async function runPublishWorkflow({
     throw error;
   }
 
-  const enabled = await toggleStrategy(config, strategyId);
+  const enabled = await toggleStrategy(config, strategyId, true);
   const actualState = formatEnabledState(findEnabledState(enabled.data));
 
   return {

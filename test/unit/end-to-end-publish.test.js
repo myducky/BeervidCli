@@ -46,7 +46,7 @@ test("runEndToEndPublishWorkflow creates video then publishes and fetches publis
     },
     normalizeVideoPublishPayload: (body) => body,
     watchTask: async () => ({ taskId: "task_123", status: "success" }),
-    buildVideoLibraryListRequest: () => ({ current: 1, size: 10 }),
+    buildVideoLibraryListRequest: (flags) => ({ current: 1, size: 10, taskIds: [flags["task-ids"]] }),
     findRecords: (data) => data.data.records,
   });
 
@@ -61,6 +61,7 @@ test("runEndToEndPublishWorkflow creates video then publishes and fetches publis
   assert.equal(result.summary.taskId, "task_123");
   assert.equal(result.summary.videoId, "video_123");
   assert.equal(result.summary.publishTaskId, "publish_123");
+  assert.deepEqual(calls[1].body.taskIds, ["task_123"]);
 });
 
 test("runEndToEndPublishWorkflow requires publish task id by default", async () => {
