@@ -1,4 +1,5 @@
 const { normalizeVideoCreatePayload } = require("./core");
+const path = require("path");
 const {
   isHttpUrl,
   resolveExistingLocalPath,
@@ -6,6 +7,16 @@ const {
   uploadRemoteFile,
 } = require("./uploads");
 const { fail } = require("./validation");
+
+const ASSET_PATH_EXTENSIONS = new Set([
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".mp4",
+  ".mov",
+  ".mp3",
+  ".wav",
+]);
 
 function validateVideoCreatePayload(body, flags = {}) {
   const payload = normalizeVideoCreatePayload(body);
@@ -179,7 +190,18 @@ async function uploadAssetString(config, value, fileType, flags, apiRequest) {
     }
     return uploadRemoteFile({ config, sourceUrl: value, fileType, apiRequest });
   }
+  if (looksLikeLocalAssetPath(value)) {
+    fail(`Asset path does not exist: ${value}`, 1);
+  }
   return value;
+}
+
+function looksLikeLocalAssetPath(value) {
+  if (typeof value !== "string" || value.trim() === "") return false;
+  if (isHttpUrl(value)) return false;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(value)) return false;
+  const ext = path.extname(value).toLowerCase();
+  return ASSET_PATH_EXTENSIONS.has(ext) || value.startsWith("./") || value.startsWith("../") || value.startsWith("~/") || value.startsWith("/");
 }
 
 function cloneJson(value) {

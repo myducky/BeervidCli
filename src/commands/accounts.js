@@ -6,6 +6,7 @@ async function handleAccounts(subcommand, flags, config, deps) {
     apiRequest,
     findRecords,
     formatOutput,
+    fail,
     printSubcommandHelp,
   } = deps;
 
@@ -17,6 +18,9 @@ async function handleAccounts(subcommand, flags, config, deps) {
     query.size = parsePositiveInteger(flags.size, "--size", 10);
     copyOptionalFlag(flags, query, "keyword");
     query.shoppableType = flags["shoppable-type"] || "ALL";
+    if (!["ALL", "TT", "TTS"].includes(query.shoppableType)) {
+      fail("--shoppable-type must be one of: ALL, TT, TTS", 1);
+    }
     const response = await apiRequest(config, {
       method: "GET",
       path: "/tt-accounts",

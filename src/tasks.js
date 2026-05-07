@@ -4,8 +4,8 @@ const { fail, parseNonNegativeNumber, parsePositiveInteger, parsePositiveNumber 
 async function getTask({ config, taskId, flags, apiRequest, findRecords, copyOptionalFlag }) {
   const query = {};
   copyOptionalFlag(flags, query, "status");
-  copyOptionalFlag(flags, query, "current");
-  copyOptionalFlag(flags, query, "size");
+  if (flags.current != null) query.current = parsePositiveInteger(flags.current, "--current");
+  if (flags.size != null) query.size = parsePositiveInteger(flags.size, "--size");
   const response = await apiRequest(config, {
     method: "GET",
     path: "/video-create/tasks",

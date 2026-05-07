@@ -105,3 +105,35 @@ test("prepareVideoCreatePayload leaves non-local asset URLs unchanged when uploa
 
   assert.equal(payload.headVideo.fileUrl, "https://cdn.example/head.mp4");
 });
+
+test("prepareVideoCreatePayload rejects missing local asset paths before create request", async () => {
+  await assert.rejects(
+    () => prepareVideoCreatePayload(
+      { apiKey: "test-key" },
+      {
+        techType: "veo",
+        videoScale: "9:16",
+        headVideo: {
+          fileUrl: "./missing-head.mp4",
+        },
+        fragmentList: [
+          {
+            videoContent: "Create a short video.",
+            useCoverFrame: false,
+            segmentCount: 1,
+            spliceMethod: "SPLICE",
+          },
+        ],
+      },
+      { quiet: true },
+      async () => {
+        throw new Error("apiRequest should not be called");
+      },
+    ),
+    (error) => {
+      assert.equal(error.exitCode, 1);
+      assert.match(error.message, /Asset path does not exist/);
+      return true;
+    },
+  );
+});

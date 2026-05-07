@@ -43,3 +43,27 @@ test("watchTask times out after max attempts", async () => {
 
   assert.equal(calls, 2);
 });
+
+test("getTask validates pagination flags before querying tasks", async () => {
+  const { getTask } = require("../../src/tasks");
+
+  await assert.rejects(
+    () => getTask({
+      config: {},
+      taskId: "task_123",
+      flags: { current: "bad" },
+      apiRequest: async () => {
+        throw new Error("apiRequest should not be called");
+      },
+      findRecords: () => [],
+      copyOptionalFlag(flags, target, key) {
+        if (flags[key] != null) target[key] = flags[key];
+      },
+    }),
+    (error) => {
+      assert.equal(error.exitCode, 1);
+      assert.match(error.message, /--current must be a positive integer/);
+      return true;
+    },
+  );
+});

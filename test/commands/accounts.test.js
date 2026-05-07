@@ -27,6 +27,11 @@ function createAccountsDeps(overrides = {}) {
       return data.data.records;
     },
     printSubcommandHelp() {},
+    fail(message, exitCode = 1) {
+      const error = new Error(message);
+      error.exitCode = exitCode;
+      throw error;
+    },
     ...collectOutput(),
     ...overrides,
   };
@@ -118,6 +123,19 @@ test("accounts shoppable rejects invalid pagination flags", async () => {
     (error) => {
       assert.equal(error.exitCode, 1);
       assert.match(error.message, /--size must be a positive integer/);
+      return true;
+    },
+  );
+});
+
+test("accounts list rejects invalid shoppable type", async () => {
+  const deps = createAccountsDeps();
+
+  await assert.rejects(
+    () => handleAccounts("list", { "shoppable-type": "BAD" }, { apiKey: "test-key" }, deps),
+    (error) => {
+      assert.equal(error.exitCode, 1);
+      assert.match(error.message, /--shoppable-type must be one of/);
       return true;
     },
   );
