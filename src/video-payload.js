@@ -128,18 +128,44 @@ async function replaceUploadFieldWithUrls(config, target, field, fileType, flags
   if (!Array.isArray(target[field])) return;
   const uploaded = [];
   for (const item of target[field]) {
-    uploaded.push(await maybeUploadPayloadAsset(config, item, fileType, flags, apiRequest));
+    uploaded.push(await uploadAssetValue(config, item, fileType, flags, apiRequest));
   }
   target[field] = uploaded;
 }
 
 async function replaceUploadFieldWithUrl(config, target, field, fileType, flags, apiRequest) {
   if (target[field] == null || target[field] === "") return;
-  target[field] = await maybeUploadPayloadAsset(config, target[field], fileType, flags, apiRequest);
+  target[field] = await uploadAssetValue(config, target[field], fileType, flags, apiRequest);
 }
 
 async function maybeUploadPayloadAsset(config, value, fileType, flags, apiRequest) {
-  if (typeof value !== "string") return value;
+  return uploadAssetValue(config, value, fileType, flags, apiRequest);
+}
+
+async function uploadAssetValue(config, value, fileType, flags, apiRequest) {
+  if (typeof value === "string") {
+    return uploadAssetString(config, value, fileType, flags, apiRequest);
+  }
+  if (Array.isArray(value)) {
+    const uploaded = [];
+    for (const item of value) {
+      uploaded.push(await uploadAssetValue(config, item, fileType, flags, apiRequest));
+    }
+    return uploaded;
+  }
+  if (value && typeof value === "object") {
+    const uploaded = { ...value };
+    for (const key of ["fileUrl", "fileURL", "url", "src"]) {
+      if (typeof uploaded[key] === "string") {
+        uploaded[key] = await uploadAssetString(config, uploaded[key], fileType, flags, apiRequest);
+      }
+    }
+    return uploaded;
+  }
+  return value;
+}
+
+async function uploadAssetString(config, value, fileType, flags, apiRequest) {
   const filePath = resolveExistingLocalPath(value);
   if (filePath) {
     if (!flags.quiet) {
@@ -147,7 +173,7 @@ async function maybeUploadPayloadAsset(config, value, fileType, flags, apiReques
     }
     return uploadLocalFile({ config, filePath, fileType, apiRequest });
   }
-  if (isHttpUrl(value)) {
+  if (isHttpUrl(value) && flags["upload-remote-assets"]) {
     if (!flags.quiet) {
       console.error(`Uploading ${fileType} from URL: ${value}`);
     }

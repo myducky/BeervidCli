@@ -161,6 +161,8 @@ BEERVID_API_KEY="$BEERVID_API_KEY" BEERVID_BASE_URL="$BEERVID_BASE_URL" npx beer
 
 Copy the returned image `fileUrl` into `examples/production/video-create.local.json` if the video-create test uses `productReferenceImages`.
 
+For video-create payloads, local paths in `bgmList`, `headVideo`, `endVideo`, `productReferenceImages`, `nineGridImages`, and `portraitImages` are uploaded automatically. Existing `http/https` URLs should normally be left as-is; add `--upload-remote-assets` only when the remote URL must be copied into Beervid storage first.
+
 ## Video Creation And Task Commands
 
 Create:

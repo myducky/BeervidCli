@@ -282,7 +282,7 @@ beervid video upload --path ./assets/intro.mp4 --type video
 
 Manual upload output includes the resolved local path, upload type, file size, and returned `file_url`. Missing files, unsupported extensions, oversized files, and upload responses without `fileUrl` are treated as CLI errors before the value is used by later requests.
 
-For `video create` and `video run`, local file paths and `http/https` URLs in these fields are uploaded automatically before the create request is submitted:
+For `video create`, `video run`, and `workflow publish`, local file paths in these fields are uploaded automatically before the create request is submitted:
 
 ```text
 bgmList
@@ -293,7 +293,9 @@ fragmentList[].nineGridImages
 fragmentList[].portraitImages
 ```
 
-The CLI replaces each local path or remote URL with the returned `fileUrl`.
+The CLI replaces each local path with the returned `fileUrl`. These fields may be plain strings or objects containing `fileUrl`, `fileURL`, `url`, or `src`; nested asset URLs are updated in place.
+
+Remote `http/https` URLs are left unchanged by default. Use `--upload-remote-assets` only when a remote URL must be downloaded and re-uploaded to Beervid first.
 
 Supported upload limits:
 

@@ -167,7 +167,10 @@ package dry-run includes bin, src, examples, README
 | VC-022 | SORA family `segmentCount != 1` | Exit `1` |
 | VC-023 | SORA family multiple fragments | Exit `1` |
 | VC-024 | SORA family `LONG_TAKE` | Exit `1` |
-| VC-025 | Local/remote asset fields | Uploaded and replaced by returned `fileUrl` |
+| VC-025 | Local asset strings | Uploaded and replaced by returned `fileUrl` |
+| VC-026 | Nested asset objects | `fileUrl`, `fileURL`, `url`, and `src` local paths are uploaded and replaced in place |
+| VC-027 | Existing remote/CDN asset URLs | Left unchanged by default, no upload call |
+| VC-028 | Remote asset re-upload | With `--upload-remote-assets`, remote URLs are downloaded, validated, uploaded, and replaced |
 
 ### Video Commands And Workflows
 
