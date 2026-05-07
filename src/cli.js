@@ -1,3 +1,4 @@
+const path = require("path");
 const { loadConfig, saveApiKey, clearApiKey, getConfigPath } = require("./config");
 const {
   findDeepValue,
@@ -125,6 +126,7 @@ const commandDeps = {
   formatFileSize,
   normalizeStrategyPayload,
   normalizeVideoPublishPayload,
+  path,
   prepareVideoCreatePayload,
   printSubcommandHelp,
   readJsonInput,
@@ -194,24 +196,33 @@ function findStrategyId(data) {
   return findDeepValue(data, ["strategyId", "strategy_id", "id"]);
 }
 
-async function resolveCreatorUserOpenId(config, flags) {
+async function resolveCreatorUserOpenId(config, flags, deps = {}) {
   if (flags["creator-user-open-id"]) return flags["creator-user-open-id"];
   if (!flags["account-id"]) {
     fail("Usage: beervid publish products --creator-user-open-id <open_id> [--current <n>] [--size <n>]", 1);
   }
 
-  const response = await apiRequest(config, {
-    method: "GET",
-    path: "/tt-accounts",
-    query: {
-      current: 1,
-      size: parsePositiveInteger(flags.size, "--size", 100),
-      shoppableType: "ALL",
-    },
-  });
-  const record = findRecords(response.data).find((item) => (
-    item.businessId === flags["account-id"] || item.id === flags["account-id"] || item.accountId === flags["account-id"]
-  ));
+  const request = deps.apiRequest || apiRequest;
+  let current = 1;
+  let pages = 1;
+  let record = null;
+  do {
+    const response = await request(config, {
+      method: "GET",
+      path: "/tt-accounts",
+      query: {
+        current,
+        size: 100,
+        shoppableType: "ALL",
+      },
+    });
+    record = findRecords(response.data).find((item) => (
+      item.businessId === flags["account-id"] || item.id === flags["account-id"] || item.accountId === flags["account-id"]
+    ));
+    pages = Number(findDeepValue(response.data, ["pages"])) || current;
+    current += 1;
+  } while (!record && current <= pages);
+
   if (!record || !record.creatorUserOpenId) {
     fail(`Unable to resolve creatorUserOpenId for account: ${flags["account-id"]}`, 5);
   }
@@ -220,5 +231,6 @@ async function resolveCreatorUserOpenId(config, flags) {
 
 module.exports = {
   main,
+  resolveCreatorUserOpenId,
   validateVideoCreatePayload,
 };

@@ -141,6 +141,10 @@ beervid accounts list [--shoppable-type <ALL|TT|TTS>] [--keyword <text>] [--curr
 beervid accounts shoppable [--keyword <text>] [--current <n>] [--size <n>]
 ```
 
+`accounts list` returns all bound accounts by default. Use the returned `businessId`/first-column account id for normal video publishing and strategy creation.
+
+`accounts shoppable` is only a convenience view for TTS/shopping-cart-capable accounts. Use it when you need to confirm whether an account can attach products.
+
 ### Labels And Templates
 
 ```bash
@@ -182,6 +186,16 @@ beervid publish strategy delete --id strategy_xxx
 beervid publish records
 beervid publish run --file ./examples/publish-strategy-template.json
 ```
+
+Product lookup uses `creatorUserOpenId`. Normal publishing and strategy creation use `businessId`.
+
+If you already have `creatorUserOpenId`, query products directly:
+
+```bash
+beervid publish products --creator-user-open-id creator_open_id_xxx --current 1 --size 20 --json
+```
+
+If you only know the account `businessId`, use `--account-id`; the CLI will resolve the account's `creatorUserOpenId` from `accounts list` first, then query products with that value.
 
 `publish run` creates a publish strategy and enables it in one flow.
 

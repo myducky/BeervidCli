@@ -64,7 +64,12 @@ async function handleAccounts(subcommand, flags, config, deps) {
       textLines: [
         `${records.length} shoppable account${records.length === 1 ? "" : "s"} found`,
         "",
-        ...records.map((record) => `- ${record.id || record.accountId || "-"}  ${record.displayName || record.name || "-"}`),
+        ...records.map((record) => {
+          const id = record.businessId || record.id || record.accountId || "-";
+          const name = record.displayName || record.name || "-";
+          const openId = record.creatorUserOpenId || "-";
+          return `- ${id}  ${name}   creator_user_open_id=${openId}`;
+        }),
       ],
     });
     return;

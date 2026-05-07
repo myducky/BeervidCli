@@ -23,11 +23,7 @@ async function handlePublish(subcommand, rest, flags, config, deps) {
   if (subcommand === "products") {
     const body = flags.file || flags.stdin
       ? readJsonInput(flags)
-      : {
-          current: parsePositiveInteger(flags.current, "--current", 1),
-          size: parsePositiveInteger(flags.size, "--size", 10),
-          creatorUserOpenId: await resolveCreatorUserOpenId(config, flags),
-        };
+      : await buildProductsRequest(config, flags, { parsePositiveInteger, resolveCreatorUserOpenId });
     const creatorUserOpenId =
       body.creatorUserOpenId ||
       flags["creator-user-open-id"] ||
@@ -38,15 +34,24 @@ async function handlePublish(subcommand, rest, flags, config, deps) {
       body,
     });
     const records = findRecords(response.data);
+    const textLines = [
+      `${records.length} products found${creatorUserOpenId ? ` for creator ${creatorUserOpenId}` : ""}`,
+      "",
+      ...records.map((record) => `- ${record.id || record.productId || "-"}  ${record.title || record.name || record.productName || "-"}`),
+    ];
+    if (records.length === 0 && creatorUserOpenId) {
+      textLines.push(
+        "",
+        "If this should have products, verify the ID is creatorUserOpenId from Beervid account data, not TikTok openID or creator ID:",
+        "  beervid accounts shoppable --json",
+        "  beervid accounts list --shoppable-type TTS --json",
+      );
+    }
     formatOutput({
       flags,
       command: "publish.products",
       data: response.data,
-      textLines: [
-        `${records.length} products found${creatorUserOpenId ? ` for creator ${creatorUserOpenId}` : ""}`,
-        "",
-        ...records.map((record) => `- ${record.id || record.productId || "-"}  ${record.title || record.name || record.productName || "-"}`),
-      ],
+      textLines,
     });
     return;
   }
@@ -256,7 +261,28 @@ async function handlePublishStrategy(subcommand, flags, config, deps) {
   printSubcommandHelp("publish.strategy");
 }
 
+async function buildProductsRequest(config, flags, deps) {
+  const body = {
+    request: {
+      current: deps.parsePositiveInteger(flags.current, "--current", 1),
+      size: deps.parsePositiveInteger(flags.size, "--size", 10),
+    },
+  };
+  if (!flags["account-id"] && !flags["creator-user-open-id"]) {
+    const error = new Error("Usage: beervid publish products --creator-user-open-id <open_id> [--current <n>] [--size <n>]\n   or: beervid publish products --account-id <business_id> [--current <n>] [--size <n>]");
+    error.exitCode = 1;
+    throw error;
+  }
+  if (flags["creator-user-open-id"]) {
+    body.creatorUserOpenId = flags["creator-user-open-id"];
+  } else if (flags["account-id"]) {
+    body.creatorUserOpenId = await deps.resolveCreatorUserOpenId(config, flags);
+  }
+  return body;
+}
+
 module.exports = {
   handlePublish,
   handlePublishStrategy,
+  buildProductsRequest,
 };

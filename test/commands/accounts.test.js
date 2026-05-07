@@ -77,7 +77,7 @@ test("accounts shoppable hard-codes TTS query mode", async () => {
       return {
         data: {
           data: {
-            records: [{ id: "acct_1", displayName: "Shop One" }],
+            records: [{ id: "acct_1", displayName: "Shop One", creatorUserOpenId: "creator_open_1" }],
           },
         },
       };
@@ -100,6 +100,7 @@ test("accounts shoppable hard-codes TTS query mode", async () => {
   ]);
   assert.equal(deps.calls[0].command, "accounts.shoppable");
   assert.match(deps.calls[0].textLines.join("\n"), /1 shoppable account found/);
+  assert.match(deps.calls[0].textLines.join("\n"), /creator_user_open_id=creator_open_1/);
 });
 
 test("accounts list rejects invalid pagination flags", async () => {

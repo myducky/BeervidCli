@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const { handlePublish, handlePublishStrategy } = require("../../src/commands/publish");
+const { resolveCreatorUserOpenId } = require("../../src/cli");
 const { createPublishDeps } = require("../support/publish-deps");
 
 test("publish products accepts --file body without resolving account context", async () => {
@@ -40,12 +41,152 @@ test("publish products accepts --file body without resolving account context", a
     path: "/shop-products/list",
     body: {
       creatorUserOpenId: "__REPLACE_WITH_CREATOR_USER_OPEN_ID__",
-      current: 1,
-      size: 20,
+      request: {
+        current: 1,
+        size: 20,
+      },
     },
   });
   assert.equal(outputs.length, 1);
   assert.equal(outputs[0].command, "publish.products");
+});
+
+test("publish products requires account context when not using a file body", async () => {
+  const deps = createPublishDeps();
+
+  await assert.rejects(
+    () => handlePublish(
+      "products",
+      [],
+      { current: "2", size: "20" },
+      { apiKey: "test-key" },
+      deps,
+    ),
+    (error) => {
+      assert.equal(error.exitCode, 1);
+      assert.match(error.message, /--creator-user-open-id/);
+      assert.match(error.message, /--account-id/);
+      return true;
+    },
+  );
+});
+
+test("publish products resolves account id to creatorUserOpenId for product query", async () => {
+  const calls = [];
+  const outputs = [];
+  const deps = createPublishDeps({
+    async resolveCreatorUserOpenId(_config, flags) {
+      assert.equal(flags["account-id"], "biz_123");
+      return "creator_open_1";
+    },
+    async apiRequest(_config, request) {
+      calls.push(request);
+      return {
+        data: {
+          code: 0,
+          message: "success",
+          data: {
+            records: [{ id: "product_1", title: "Seat Cover" }],
+          },
+        },
+      };
+    },
+    formatOutput(result) {
+      outputs.push(result);
+    },
+  });
+
+  await handlePublish(
+    "products",
+    [],
+    { "account-id": "biz_123", current: "2", size: "20" },
+    { apiKey: "test-key" },
+    deps,
+  );
+
+  assert.deepEqual(calls[0], {
+    method: "POST",
+    path: "/shop-products/list",
+    body: {
+      request: {
+        current: 2,
+        size: 20,
+      },
+      creatorUserOpenId: "creator_open_1",
+    },
+  });
+  assert.match(outputs[0].textLines.join("\n"), /1 products found/);
+});
+
+test("resolveCreatorUserOpenId scans account pages until it finds account id", async () => {
+  const calls = [];
+  const creatorUserOpenId = await resolveCreatorUserOpenId(
+    { apiKey: "test-key" },
+    { "account-id": "biz_2", size: "20" },
+    {
+      async apiRequest(_config, request) {
+        calls.push(request);
+        if (request.query.current === 1) {
+          return {
+            data: {
+              data: {
+                records: [{ businessId: "biz_1", creatorUserOpenId: "creator_open_1" }],
+                pages: 2,
+              },
+            },
+          };
+        }
+        return {
+          data: {
+            data: {
+              records: [{ businessId: "biz_2", creatorUserOpenId: "creator_open_2" }],
+              pages: 2,
+            },
+          },
+        };
+      },
+    },
+  );
+
+  assert.equal(creatorUserOpenId, "creator_open_2");
+  assert.deepEqual(calls.map((call) => call.query), [
+    { current: 1, size: 100, shoppableType: "ALL" },
+    { current: 2, size: 100, shoppableType: "ALL" },
+  ]);
+});
+
+test("publish products includes creatorUserOpenId only when explicitly provided", async () => {
+  const calls = [];
+  const deps = createPublishDeps({
+    async apiRequest(_config, request) {
+      calls.push(request);
+      return {
+        data: {
+          code: 0,
+          message: "success",
+          data: {
+            products: [],
+          },
+        },
+      };
+    },
+  });
+
+  await handlePublish(
+    "products",
+    [],
+    { "creator-user-open-id": "creator_open_1" },
+    { apiKey: "test-key" },
+    deps,
+  );
+
+  assert.deepEqual(calls[0].body, {
+    request: {
+      current: 1,
+      size: 10,
+    },
+    creatorUserOpenId: "creator_open_1",
+  });
 });
 
 test("publish products validates pagination flags", async () => {
@@ -59,7 +200,7 @@ test("publish products validates pagination flags", async () => {
     () => handlePublish(
       "products",
       [],
-      { current: "abc", "creator-user-open-id": "creator_123" },
+      { current: "abc" },
       { apiKey: "test-key" },
       deps,
     ),
@@ -69,6 +210,31 @@ test("publish products validates pagination flags", async () => {
       return true;
     },
   );
+});
+
+test("publish products explains how to find creatorUserOpenId when no products are found", async () => {
+  const outputs = [];
+  const deps = createPublishDeps({
+    async resolveCreatorUserOpenId() {
+      return "creator_open_1";
+    },
+    formatOutput(result) {
+      outputs.push(result);
+    },
+  });
+
+  await handlePublish(
+    "products",
+    [],
+    { "creator-user-open-id": "creator_open_1" },
+    { apiKey: "test-key" },
+    deps,
+  );
+
+  const text = outputs[0].textLines.join("\n");
+  assert.match(text, /0 products found for creator creator_open_1/);
+  assert.match(text, /beervid accounts shoppable --json/);
+  assert.match(text, /creatorUserOpenId/);
 });
 
 test("publish strategy create unwraps strategyCreateDTO before sending", async () => {

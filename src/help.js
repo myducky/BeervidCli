@@ -86,6 +86,7 @@ const HELP_TOPICS = {
   publish: [
     "Usage:",
     "  beervid publish products --creator-user-open-id <open_id>",
+    "  beervid publish products --account-id <account_id>",
     "  beervid publish strategy list [--current <n>] [--size <n>]",
     "  beervid publish strategy get --id <strategy_id>",
     "  beervid publish strategy create --file <strategy.json>",
@@ -94,6 +95,11 @@ const HELP_TOPICS = {
     "  beervid publish strategy delete --id <strategy_id>",
     "  beervid publish records",
     "  beervid publish run --file <strategy.json>",
+    "",
+    "Product Notes:",
+    "  product lookup uses creatorUserOpenId",
+    "  publishing and strategies use businessId",
+    "  --account-id resolves businessId to creatorUserOpenId before querying products",
   ],
   workflow: [
     "Usage:",
