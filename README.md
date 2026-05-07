@@ -26,7 +26,7 @@ The CLI wraps the documented Beervid Open API surface as first-class commands. F
 | `POST /strategies/list` | `beervid publish strategy list` |
 | `GET /strategies/{id}` | `beervid publish strategy get --id <strategy_id>` |
 | `POST /strategies/create` | `beervid publish strategy create`, `beervid publish run` |
-| `POST /strategies/{id}/toggle` | `beervid publish strategy enable|disable`, `beervid publish run` |
+| `POST /strategies/{id}/toggle` | `beervid publish strategy enable`, `beervid publish strategy disable`, `beervid publish run` |
 | `DELETE /strategies/{id}` | `beervid publish strategy delete` |
 | `POST /send-records/list` | `beervid publish records` |
 
