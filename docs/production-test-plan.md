@@ -231,10 +231,11 @@ Get:
 BEERVID_API_KEY="$BEERVID_API_KEY" BEERVID_BASE_URL="$BEERVID_BASE_URL" npx beervid-cli@0.1.13 publish strategy get --id "$BEERVID_TEST_STRATEGY_ID" --json
 ```
 
-Enable and disable only after confirming the strategy schedule is a future date:
+Enable only after confirming the target publish time in `pushConfig` is a future date. If you need to verify a strategy-triggered publish, keep the strategy enabled until 5-10 minutes after that target publish time, then query publish records before disabling it:
 
 ```bash
 BEERVID_API_KEY="$BEERVID_API_KEY" BEERVID_BASE_URL="$BEERVID_BASE_URL" npx beervid-cli@0.1.13 publish strategy enable --id "$BEERVID_TEST_STRATEGY_ID" --json
+BEERVID_API_KEY="$BEERVID_API_KEY" BEERVID_BASE_URL="$BEERVID_BASE_URL" npx beervid-cli@0.1.13 publish records --strategy-id "$BEERVID_TEST_STRATEGY_ID" --current 1 --size 10 --json
 BEERVID_API_KEY="$BEERVID_API_KEY" BEERVID_BASE_URL="$BEERVID_BASE_URL" npx beervid-cli@0.1.13 publish strategy disable --id "$BEERVID_TEST_STRATEGY_ID" --json
 ```
 
@@ -306,6 +307,7 @@ Go only if:
 - Video list can resolve the generated video.
 - Video publish returns a publish task id or a documented success response.
 - Publish strategy can be created, queried, disabled, and deleted.
+- Strategy-triggered publish records are checked 5-10 minutes after the target publish time configured in `pushConfig`.
 - No command prints malformed JSON in `--json` mode.
 
 No-go if:

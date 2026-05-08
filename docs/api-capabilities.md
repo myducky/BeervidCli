@@ -548,6 +548,7 @@ beervid publish strategy create --file ./examples/publish-strategy-template.json
 Notes:
 - Strategy creation/publishing uses `businessId`, not `creatorUserOpenId`.
 - CLI unwraps `{ "strategyCreateDTO": { ... } }` if provided.
+- Strategy execution is asynchronous. After enabling a strategy, wait 5-10 minutes after the target publish time configured in `pushConfig` before querying publish records. Do not disable the strategy immediately after that target publish time if you need to verify delayed execution.
 
 ### `POST /strategies/{id}/toggle`
 
@@ -586,6 +587,7 @@ Queries strategy and manual video publishing records.
 
 Prerequisites:
 - Valid API key.
+- For strategy-triggered publishes, query records 5-10 minutes after the target publish time configured in `pushConfig` because scheduler execution can be delayed.
 
 Request fields:
 

@@ -188,6 +188,8 @@ beervid publish run --file ./examples/publish-strategy-template.json
 
 Product lookup uses `creatorUserOpenId`. Normal publishing and strategy creation use `businessId`.
 
+After enabling a publish strategy, execution is asynchronous. Wait 5-10 minutes after the target publish time configured in `pushConfig` before querying `publish records`; disabling the strategy immediately after that target publish time can prevent the delayed execution from publishing.
+
 For product lookup, pass the ID you have. The CLI accepts `businessId`, account `id`/`accountId`, or `creatorUserOpenId`. It resolves account IDs automatically and fetches all product pages by default:
 
 ```bash

@@ -219,6 +219,8 @@ package dry-run includes bin, src, examples, README
 | PUB-015 | `publish run` success | strategy body | Create strategy then explicitly enable with `true` |
 | PUB-016 | `publish run` missing strategy id | create response lacks id | Exit `5` |
 
+Manual strategy publish verification: after enabling a strategy, wait 5-10 minutes after the target publish time configured in `pushConfig`, then query `publish records --strategy-id <id>` before disabling or deleting the strategy.
+
 ### End-To-End Workflow
 
 | ID | Scenario | Expected |
