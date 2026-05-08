@@ -198,8 +198,9 @@ function findStrategyId(data) {
 
 async function resolveCreatorUserOpenId(config, flags, deps = {}) {
   if (flags["creator-user-open-id"]) return flags["creator-user-open-id"];
-  if (!flags["account-id"]) {
-    fail("Usage: beervid publish products --creator-user-open-id <open_id> [--current <n>] [--size <n>]", 1);
+  const accountId = flags["account-id"] || flags.id;
+  if (!accountId) {
+    fail("Usage: beervid publish products <id> [--current <n>] [--size <n>]", 1);
   }
 
   const request = deps.apiRequest || apiRequest;
@@ -217,14 +218,17 @@ async function resolveCreatorUserOpenId(config, flags, deps = {}) {
       },
     });
     record = findRecords(response.data).find((item) => (
-      item.businessId === flags["account-id"] || item.id === flags["account-id"] || item.accountId === flags["account-id"]
+      item.businessId === accountId || item.id === accountId || item.accountId === accountId || item.creatorUserOpenId === accountId
     ));
     pages = Number(findDeepValue(response.data, ["pages"])) || current;
     current += 1;
   } while (!record && current <= pages);
 
-  if (!record || !record.creatorUserOpenId) {
-    fail(`Unable to resolve creatorUserOpenId for account: ${flags["account-id"]}`, 5);
+  if (!record) {
+    return accountId;
+  }
+  if (!record.creatorUserOpenId) {
+    fail(`Unable to resolve creatorUserOpenId for account: ${accountId}`, 5);
   }
   return record.creatorUserOpenId;
 }

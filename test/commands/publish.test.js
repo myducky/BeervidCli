@@ -49,6 +49,55 @@ test("publish products accepts --file body without resolving account context", a
   assert.equal(outputs[0].command, "publish.products");
 });
 
+test("publish products accepts a single creator user open id positional and fetches all pages by default", async () => {
+  const calls = [];
+  const outputs = [];
+  const deps = createPublishDeps({
+    async resolveCreatorUserOpenId() {
+      return "creator_open_1";
+    },
+    async apiRequest(_config, request) {
+      calls.push(request);
+      if (request.body.current === 1) {
+        return {
+          data: {
+            data: {
+              products: [{ id: "product_1", title: "Seat Cover" }],
+              total: 2,
+            },
+          },
+        };
+      }
+      return {
+        data: {
+          data: {
+            products: [{ id: "product_2", title: "Cargo Mat" }],
+            total: 2,
+          },
+        },
+      };
+    },
+    formatOutput(result) {
+      outputs.push(result);
+    },
+  });
+
+  await handlePublish(
+    "products",
+    ["creator_open_1"],
+    {},
+    { apiKey: "test-key" },
+    deps,
+  );
+
+  assert.deepEqual(calls.map((call) => call.body), [
+    { current: 1, size: 100, creatorUserOpenId: "creator_open_1" },
+    { current: 2, size: 100, creatorUserOpenId: "creator_open_1" },
+  ]);
+  assert.equal(outputs[0].data.data.products.length, 2);
+  assert.match(outputs[0].textLines.join("\n"), /2 products found/);
+});
+
 test("publish products requires account context when not using a file body", async () => {
   const deps = createPublishDeps();
 
@@ -62,8 +111,7 @@ test("publish products requires account context when not using a file body", asy
     ),
     (error) => {
       assert.equal(error.exitCode, 1);
-      assert.match(error.message, /--creator-user-open-id/);
-      assert.match(error.message, /--account-id/);
+      assert.match(error.message, /<id>/);
       return true;
     },
   );
@@ -84,7 +132,8 @@ test("publish products resolves account id to creatorUserOpenId for product quer
           code: 0,
           message: "success",
           data: {
-            records: [{ id: "product_1", title: "Seat Cover" }],
+            products: [{ id: "product_1", title: "Seat Cover" }],
+            total: 1,
           },
         },
       };
@@ -178,7 +227,7 @@ test("publish products includes creatorUserOpenId only when explicitly provided"
 
   assert.deepEqual(calls[0].body, {
     current: 1,
-    size: 10,
+    size: 100,
     creatorUserOpenId: "creator_open_1",
   });
 });

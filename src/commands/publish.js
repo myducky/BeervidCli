@@ -21,19 +21,12 @@ async function handlePublish(subcommand, rest, flags, config, deps) {
   requireApiKey(config);
 
   if (subcommand === "products") {
-    const body = flags.file || flags.stdin
-      ? readJsonInput(flags)
-      : await buildProductsRequest(config, flags, { parsePositiveInteger, resolveCreatorUserOpenId });
-    const creatorUserOpenId =
-      body.creatorUserOpenId ||
-      flags["creator-user-open-id"] ||
-      null;
-    const response = await apiRequest(config, {
-      method: "POST",
-      path: "/shop-products/list",
-      body,
-    });
-    const records = findRecords(response.data);
+    const result = flags.file || flags.stdin
+      ? await fetchProductsPage(config, apiRequest, readJsonInput(flags))
+      : await fetchAllProducts(config, rest, flags, { apiRequest, parsePositiveInteger, resolveCreatorUserOpenId });
+    const response = result.response;
+    const records = result.records;
+    const creatorUserOpenId = result.creatorUserOpenId || null;
     const textLines = [
       `${records.length} products found${creatorUserOpenId ? ` for creator ${creatorUserOpenId}` : ""}`,
       "",
@@ -262,25 +255,93 @@ async function handlePublishStrategy(subcommand, flags, config, deps) {
 }
 
 async function buildProductsRequest(config, flags, deps) {
+  const id = flags["creator-user-open-id"] || flags["account-id"] || flags.id;
   const body = {
     current: deps.parsePositiveInteger(flags.current, "--current", 1),
-    size: deps.parsePositiveInteger(flags.size, "--size", 10),
+    size: deps.parsePositiveInteger(flags.size, "--size", 100),
   };
-  if (!flags["account-id"] && !flags["creator-user-open-id"]) {
-    const error = new Error("Usage: beervid publish products --creator-user-open-id <open_id> [--current <n>] [--size <n>]\n   or: beervid publish products --account-id <business_id> [--current <n>] [--size <n>]");
+  if (!id) {
+    const error = new Error("Usage: beervid publish products <id> [--current <n>] [--size <n>]\n   id can be businessId, account id, or creatorUserOpenId");
     error.exitCode = 1;
     throw error;
   }
   if (flags["creator-user-open-id"]) {
     body.creatorUserOpenId = flags["creator-user-open-id"];
-  } else if (flags["account-id"]) {
+  } else {
     body.creatorUserOpenId = await deps.resolveCreatorUserOpenId(config, flags);
   }
   return body;
+}
+
+async function fetchProductsPage(config, apiRequest, body) {
+  const response = await apiRequest(config, {
+    method: "POST",
+    path: "/shop-products/list",
+    body,
+  });
+  return {
+    response,
+    records: findProductRecords(response.data),
+    creatorUserOpenId: body && body.creatorUserOpenId,
+  };
+}
+
+async function fetchAllProducts(config, rest, flags, deps) {
+  const id = rest[0] || flags.id || flags["creator-user-open-id"] || flags["account-id"];
+  const requestFlags = { ...flags, id };
+  const firstBody = await buildProductsRequest(config, requestFlags, deps);
+  const first = await fetchProductsPage(config, deps.apiRequest, firstBody);
+  const total = findProductTotal(first.response.data);
+  const allRecords = [...first.records];
+  const size = firstBody.size;
+  let current = firstBody.current + 1;
+  while (!flags.current && allRecords.length < total) {
+    const page = await fetchProductsPage(config, deps.apiRequest, {
+      ...firstBody,
+      current,
+      size,
+    });
+    allRecords.push(...page.records);
+    if (page.records.length === 0) break;
+    current += 1;
+  }
+  return {
+    response: withMergedProductRecords(first.response, allRecords),
+    records: allRecords,
+    creatorUserOpenId: firstBody.creatorUserOpenId,
+  };
+}
+
+function findProductRecords(data) {
+  const records = data && data.data && Array.isArray(data.data.products)
+    ? data.data.products
+    : null;
+  return records || [];
+}
+
+function findProductTotal(data) {
+  const total = data && data.data && Number(data.data.total);
+  return Number.isFinite(total) ? total : 0;
+}
+
+function withMergedProductRecords(response, records) {
+  if (!response || !response.data || !response.data.data) return response;
+  return {
+    ...response,
+    data: {
+      ...response.data,
+      data: {
+        ...response.data.data,
+        products: records,
+        total: response.data.data.total == null ? records.length : response.data.data.total,
+      },
+    },
+  };
 }
 
 module.exports = {
   handlePublish,
   handlePublishStrategy,
   buildProductsRequest,
+  fetchAllProducts,
 };

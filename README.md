@@ -175,8 +175,7 @@ beervid workflow publish --file ./examples/video-create.json --publish-file ./ex
 ### Publish
 
 ```bash
-beervid publish products --creator-user-open-id creator_open_id_xxx
-beervid publish products --account-id account_xxx
+beervid publish products <id>
 beervid publish strategy list
 beervid publish strategy get --id strategy_xxx
 beervid publish strategy create --file ./examples/publish-strategy-template.json
@@ -189,13 +188,14 @@ beervid publish run --file ./examples/publish-strategy-template.json
 
 Product lookup uses `creatorUserOpenId`. Normal publishing and strategy creation use `businessId`.
 
-If you already have `creatorUserOpenId`, query products directly:
+For product lookup, pass the ID you have. The CLI accepts `businessId`, account `id`/`accountId`, or `creatorUserOpenId`. It resolves account IDs automatically and fetches all product pages by default:
 
 ```bash
-beervid publish products --creator-user-open-id creator_open_id_xxx --current 1 --size 20 --json
+beervid publish products QKyDVwAAAACtVevfgx1WaWLjjJAy3jW1rKj493OWAPfojoDjzTkUJQ --json
+beervid publish products -000ZxXXBimZPk2nEixIq7KW4vLha2SWMfoM --json
 ```
 
-If you only know the account `businessId`, use `--account-id`; the CLI will resolve the account's `creatorUserOpenId` from `accounts list` first, then query products with that value.
+Use `--current` and `--size` only when you intentionally want a single page.
 
 `publish run` creates a publish strategy and enables it in one flow.
 

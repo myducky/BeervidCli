@@ -443,12 +443,14 @@ Response fields:
 CLI:
 
 ```bash
-beervid publish products --creator-user-open-id <creatorUserOpenId> --current 1 --size 20 --json
-beervid publish products --account-id <businessId> --current 1 --size 20 --json
+beervid publish products <businessId-or-accountId-or-creatorUserOpenId> --json
 ```
 
 Notes:
-- `--account-id` is a convenience input. The CLI resolves it through `/tt-accounts` and sends `creatorUserOpenId` to `/shop-products/list`.
+- The short form accepts `businessId`, account `id` / `accountId`, or `creatorUserOpenId`.
+- The CLI resolves account IDs through `/tt-accounts` and sends `creatorUserOpenId` to `/shop-products/list`.
+- Without `--current`, the CLI fetches all product pages using `size=100`.
+- Use `--current` and `--size` only for single-page pagination checks.
 - If an account has products but the query returns zero, verify that the `creatorUserOpenId` belongs to the same TTS/shopping authorization context.
 
 ## Publishing Strategy Management
